@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>InstaGrab FFmpeg Encoder</title>
+</head>
+<body>
+  <!--
+    ffmpeg.js   — UMD wrapper, exposes window.FFmpegWASM = { FFmpeg }
+    814.ffmpeg.js — worker bootstrap (loaded automatically by ffmpeg.js from same dir)
+    offscreen.js  — InstaGrab encoder logic, listens for FFMPEG_COMPILE_SLIDESHOW
+  -->
+  <script src="ffmpeg/ffmpeg.js"></script>
+  <script src="offscreen.js"></script>
+</body>
+</html>

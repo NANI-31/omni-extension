@@ -1,0 +1,65 @@
+{
+  "manifest_version": 3,
+  "name": "InstaGrab - Instagram Downloader",
+  "version": "1.0.0",
+  "description": "Download high-resolution images, videos, and Reels directly from Instagram in one click.",
+  "permissions": [
+    "downloads",
+    "storage",
+    "offscreen",
+    "scripting",
+    "webNavigation",
+    "webRequest",
+    "proxy"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; object-src 'self';"
+  },
+  "host_permissions": [
+    "https://*.instagram.com/*",
+    "https://*.cdninstagram.com/*",
+    "https://*.fbcdn.net/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.instagram.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["youtube.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["skiptimer.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_icon": "icon-32.png"
+  },
+  "icons": {
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://*.instagram.com/*"]
+    },
+    {
+      "resources": ["youtube-injected.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
