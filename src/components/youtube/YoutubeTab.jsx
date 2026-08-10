@@ -5,6 +5,9 @@ import YoutubeVolumeTestPad from "./features/volume/YoutubeVolumeTestPad.jsx";
 import YoutubeSpeedSettings from "./features/speed/YoutubeSpeedSettings.jsx";
 import YoutubeQualitySettings from "./features/quality/YoutubeQualitySettings.jsx";
 import YoutubeAdskipSettings from "./features/adskip/YoutubeAdskipSettings.jsx";
+import YoutubeMouse from "./features/mouse/YoutubeMouse.jsx";
+import YoutubeColorSettings, { COLOR_PRESETS } from "./features/color/YoutubeColorSettings.jsx";
+import YoutubeHistoryDeleteSettings from "./features/history/YoutubeHistoryDeleteSettings.jsx";
 
 export default function YoutubeTab() {
   const [selectedFeature, setSelectedFeature] = useState("volume");
@@ -24,6 +27,31 @@ export default function YoutubeTab() {
   const [hotkeyHold2x, setHotkeyHold2x] = useState(true);
   const [holdSpeedMult, setHoldSpeedMult] = useState(2.0);
   const [holdKey, setHoldKey] = useState("s");
+
+  // Scroll Zone States
+  const [zonesEnabled, setZonesEnabled] = useState(true);
+  const [zoneLeft, setZoneLeft] = useState("brightness");
+  const [zoneMiddle, setZoneMiddle] = useState("volume");
+  const [zoneRight, setZoneRight] = useState("speed");
+  const [brightnessSensitivity, setBrightnessSensitivity] = useState(5);
+  const [seekSensitivity, setSeekSensitivity] = useState(5);
+  const [seekCtrlSensitivity, setSeekCtrlSensitivity] = useState(30);
+
+  // Video Color Filter States — CSS
+  const [filterContrast, setFilterContrast] = useState(100);
+  const [filterSaturation, setFilterSaturation] = useState(100);
+  const [filterTemperature, setFilterTemperature] = useState(0);
+  const [filterEyeProtection, setFilterEyeProtection] = useState(0);
+  // Video Color Filter States — Tone (SVG feComponentTransfer)
+  const [filterHighlights, setFilterHighlights] = useState(0);
+  const [filterShadows, setFilterShadows] = useState(0);
+  const [filterWhites, setFilterWhites] = useState(100);
+  const [filterBlacks, setFilterBlacks] = useState(0);
+
+  // History Quick Delete States
+  const [historyDeleteEnabled, setHistoryDeleteEnabled] = useState(true);
+  const [historyDeletedCount, setHistoryDeletedCount] = useState(0);
+  const [historyDeleteDebug, setHistoryDeleteDebug] = useState(false);
 
   // Mock player states for the interactive test pad
   const [mockVolume, setMockVolume] = useState(50);
@@ -47,7 +75,29 @@ export default function YoutubeTab() {
           "ytAllowOverdrive",
           "ytHotkeyHold2x",
           "ytHoldSpeedMult",
-          "ytHoldKey"
+          "ytHoldKey",
+          // Scroll zones
+          "ytZonesEnabled",
+          "ytZoneLeft",
+          "ytZoneMiddle",
+          "ytZoneRight",
+          "ytBrightnessSensitivity",
+          "ytSeekSensitivity",
+          "ytSeekCtrlStep",
+          // Color filters
+          "ytFilterContrast",
+          "ytFilterSaturation",
+          "ytFilterTemperature",
+          "ytFilterEyeProtection",
+          // Tone / LUT controls
+          "ytFilterBlacks",
+          "ytFilterWhites",
+          "ytFilterShadows",
+          "ytFilterHighlights",
+          // History Quick Delete
+          "ytHistoryDeleteEnabled",
+          "ytHistoryDeletedCount",
+          "ytHistoryDeleteDebug",
         ],
         (result) => {
           if (result.ytVolumeControl !== undefined) {
@@ -87,9 +137,48 @@ export default function YoutubeTab() {
           if (result.ytHoldKey !== undefined) {
             setHoldKey(result.ytHoldKey);
           }
+
+          // Scroll zones
+          if (result.ytZonesEnabled !== undefined)        setZonesEnabled(result.ytZonesEnabled);
+          if (result.ytZoneLeft !== undefined)            setZoneLeft(result.ytZoneLeft);
+          if (result.ytZoneMiddle !== undefined)          setZoneMiddle(result.ytZoneMiddle);
+          if (result.ytZoneRight !== undefined)           setZoneRight(result.ytZoneRight);
+          if (result.ytBrightnessSensitivity !== undefined) setBrightnessSensitivity(Number(result.ytBrightnessSensitivity));
+          if (result.ytSeekSensitivity !== undefined)    setSeekSensitivity(Number(result.ytSeekSensitivity));
+          if (result.ytSeekCtrlStep !== undefined)       setSeekCtrlSensitivity(Number(result.ytSeekCtrlStep));
+          // Color filters — CSS
+          if (result.ytFilterContrast !== undefined)     setFilterContrast(Number(result.ytFilterContrast));
+          if (result.ytFilterSaturation !== undefined)   setFilterSaturation(Number(result.ytFilterSaturation));
+          if (result.ytFilterTemperature !== undefined)  setFilterTemperature(Number(result.ytFilterTemperature));
+          if (result.ytFilterEyeProtection !== undefined) setFilterEyeProtection(Number(result.ytFilterEyeProtection));
+          // Color filters — Tone (SVG)
+          if (result.ytFilterHighlights !== undefined)   setFilterHighlights(Number(result.ytFilterHighlights));
+          if (result.ytFilterShadows !== undefined)      setFilterShadows(Number(result.ytFilterShadows));
+          if (result.ytFilterWhites !== undefined)       setFilterWhites(Number(result.ytFilterWhites));
+          if (result.ytFilterBlacks !== undefined)       setFilterBlacks(Number(result.ytFilterBlacks));
+          // History Quick Delete
+          if (result.ytHistoryDeleteEnabled !== undefined) setHistoryDeleteEnabled(result.ytHistoryDeleteEnabled);
+          if (result.ytHistoryDeletedCount !== undefined)  setHistoryDeletedCount(Number(result.ytHistoryDeletedCount));
+          if (result.ytHistoryDeleteDebug !== undefined)   setHistoryDeleteDebug(result.ytHistoryDeleteDebug);
         }
       );
     }
+  }, []);
+
+  // Live-sync History Delete count when background increments it
+  useEffect(() => {
+    if (typeof chrome === "undefined" || !chrome.storage) return;
+    const handleStorageChange = (changes, ns) => {
+      if (ns !== "local") return;
+      if (changes.ytHistoryDeletedCount) {
+        setHistoryDeletedCount(changes.ytHistoryDeletedCount.newValue);
+      }
+      if (changes.ytHistoryDeleteEnabled) {
+        setHistoryDeleteEnabled(changes.ytHistoryDeleteEnabled.newValue);
+      }
+    };
+    chrome.storage.onChanged.addListener(handleStorageChange);
+    return () => chrome.storage.onChanged.removeListener(handleStorageChange);
   }, []);
 
   const updateSetting = (key, val) => {
@@ -175,6 +264,95 @@ export default function YoutubeTab() {
     updateSetting("ytHoldKey", nextVal);
   };
 
+  // Zone handlers
+  const handleToggleZonesEnabled = () => {
+    const next = !zonesEnabled;
+    setZonesEnabled(next);
+    updateSetting("ytZonesEnabled", next);
+  };
+  const handleZoneLeftChange = (val) => {
+    setZoneLeft(val);
+    updateSetting("ytZoneLeft", val);
+  };
+  const handleZoneMiddleChange = (val) => {
+    setZoneMiddle(val);
+    updateSetting("ytZoneMiddle", val);
+  };
+  const handleZoneRightChange = (val) => {
+    setZoneRight(val);
+    updateSetting("ytZoneRight", val);
+  };
+  const handleBrightnessSensitivityChange = (val) => {
+    setBrightnessSensitivity(val);
+    updateSetting("ytBrightnessSensitivity", val);
+  };
+  const handleSeekCtrlSensitivityChange = (val) => {
+    setSeekCtrlSensitivity(val);
+    updateSetting("ytSeekCtrlStep", val);
+  };
+  const handleSeekSensitivityChange = (val) => {
+    setSeekSensitivity(val);
+    updateSetting("ytSeekSensitivity", val);
+  };
+
+  // Color filter handlers — CSS
+  const handleFilterContrastChange = (val) => { setFilterContrast(val); updateSetting("ytFilterContrast", val); };
+  const handleFilterSaturationChange = (val) => { setFilterSaturation(val); updateSetting("ytFilterSaturation", val); };
+  const handleFilterTemperatureChange = (val) => { setFilterTemperature(val); updateSetting("ytFilterTemperature", val); };
+  const handleFilterEyeProtectionChange = (val) => { setFilterEyeProtection(val); updateSetting("ytFilterEyeProtection", val); };
+  // Color filter handlers — Tone (SVG)
+  const handleFilterHighlightsChange = (val) => { setFilterHighlights(val); updateSetting("ytFilterHighlights", val); };
+  const handleFilterShadowsChange    = (val) => { setFilterShadows(val);    updateSetting("ytFilterShadows",    val); };
+  const handleFilterWhitesChange     = (val) => { setFilterWhites(val);     updateSetting("ytFilterWhites",     val); };
+  const handleFilterBlacksChange     = (val) => { setFilterBlacks(val);     updateSetting("ytFilterBlacks",     val); };
+
+  const handleApplyPreset = (preset) => {
+    const v = preset.values;
+    if (v.ytFilterContrast      !== undefined) handleFilterContrastChange(v.ytFilterContrast);
+    if (v.ytFilterSaturation    !== undefined) handleFilterSaturationChange(v.ytFilterSaturation);
+    if (v.ytFilterTemperature   !== undefined) handleFilterTemperatureChange(v.ytFilterTemperature);
+    if (v.ytFilterEyeProtection !== undefined) handleFilterEyeProtectionChange(v.ytFilterEyeProtection);
+    if (v.ytFilterHighlights    !== undefined) handleFilterHighlightsChange(v.ytFilterHighlights);
+    if (v.ytFilterShadows       !== undefined) handleFilterShadowsChange(v.ytFilterShadows);
+    if (v.ytFilterWhites        !== undefined) handleFilterWhitesChange(v.ytFilterWhites);
+    if (v.ytFilterBlacks        !== undefined) handleFilterBlacksChange(v.ytFilterBlacks);
+  };
+
+  const handleColorResetAll = () => {
+    handleFilterContrastChange(100);
+    handleFilterSaturationChange(100);
+    handleFilterTemperatureChange(0);
+    handleFilterEyeProtectionChange(0);
+    handleFilterHighlightsChange(0);
+    handleFilterShadowsChange(0);
+    handleFilterWhitesChange(100);
+    handleFilterBlacksChange(0);
+  };
+
+  // ── History Quick Delete handlers ─────────────────────────────────────────
+  const handleToggleHistoryDelete = () => {
+    const next = !historyDeleteEnabled;
+    setHistoryDeleteEnabled(next);
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      chrome.storage.local.set({ ytHistoryDeleteEnabled: next });
+    }
+  };
+
+  const handleResetHistoryCount = () => {
+    setHistoryDeletedCount(0);
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      chrome.storage.local.set({ ytHistoryDeletedCount: 0 });
+    }
+  };
+
+  const handleToggleHistoryDebug = () => {
+    const next = !historyDeleteDebug;
+    setHistoryDeleteDebug(next);
+    if (typeof chrome !== "undefined" && chrome.storage) {
+      chrome.storage.local.set({ ytHistoryDeleteDebug: next });
+    }
+  };
+
   const triggerMockHUD = () => {
     if (!showHUD) return;
     setHudVisible(true);
@@ -208,6 +386,18 @@ export default function YoutubeTab() {
       status: "Active"
     },
     {
+      id: "mouse",
+      name: "Mouse Scroll Zones",
+      icon: "🖱️",
+      status: "Active"
+    },
+    {
+      id: "color",
+      name: "Video Color Lab",
+      icon: "🎨",
+      status: "Active"
+    },
+    {
       id: "quality",
       name: "Auto HD Quality Locker",
       icon: "🎬",
@@ -218,6 +408,12 @@ export default function YoutubeTab() {
       name: "Ad Skip & Fast-forward",
       icon: "📺",
       status: "Planned"
+    },
+    {
+      id: "history",
+      name: "History Quick Delete",
+      icon: "🗑️",
+      status: "Active"
     }
   ];
 
@@ -290,8 +486,56 @@ export default function YoutubeTab() {
             handleHoldKeyChange={handleHoldKeyChange}
           />
         )}
+        {selectedFeature === "mouse" && (
+          <YoutubeMouse
+            zonesEnabled={zonesEnabled}
+            handleToggleZonesEnabled={handleToggleZonesEnabled}
+            zoneLeft={zoneLeft}
+            handleZoneLeftChange={handleZoneLeftChange}
+            zoneMiddle={zoneMiddle}
+            handleZoneMiddleChange={handleZoneMiddleChange}
+            brightnessSensitivity={brightnessSensitivity}
+            handleBrightnessSensitivityChange={handleBrightnessSensitivityChange}
+            seekSensitivity={seekSensitivity}
+            handleSeekSensitivityChange={handleSeekSensitivityChange}
+            seekCtrlSensitivity={seekCtrlSensitivity}
+            handleSeekCtrlSensitivityChange={handleSeekCtrlSensitivityChange}
+          />
+        )}
+        {selectedFeature === "color" && (
+          <YoutubeColorSettings
+            filterContrast={filterContrast}
+            handleFilterContrastChange={handleFilterContrastChange}
+            filterSaturation={filterSaturation}
+            handleFilterSaturationChange={handleFilterSaturationChange}
+            filterTemperature={filterTemperature}
+            handleFilterTemperatureChange={handleFilterTemperatureChange}
+            filterEyeProtection={filterEyeProtection}
+            handleFilterEyeProtectionChange={handleFilterEyeProtectionChange}
+            filterHighlights={filterHighlights}
+            handleFilterHighlightsChange={handleFilterHighlightsChange}
+            filterShadows={filterShadows}
+            handleFilterShadowsChange={handleFilterShadowsChange}
+            filterWhites={filterWhites}
+            handleFilterWhitesChange={handleFilterWhitesChange}
+            filterBlacks={filterBlacks}
+            handleFilterBlacksChange={handleFilterBlacksChange}
+            onApplyPreset={handleApplyPreset}
+            onResetAll={handleColorResetAll}
+          />
+        )}
         {selectedFeature === "quality" && <YoutubeQualitySettings />}
         {selectedFeature === "adskip" && <YoutubeAdskipSettings />}
+        {selectedFeature === "history" && (
+          <YoutubeHistoryDeleteSettings
+            enabled={historyDeleteEnabled}
+            onToggleEnabled={handleToggleHistoryDelete}
+            deletedCount={historyDeletedCount}
+            onResetCount={handleResetHistoryCount}
+            debug={historyDeleteDebug}
+            onToggleDebug={handleToggleHistoryDebug}
+          />
+        )}
       </div>
 
     </div>

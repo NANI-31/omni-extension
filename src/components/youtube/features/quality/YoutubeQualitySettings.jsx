@@ -64,7 +64,7 @@ export default function YoutubeQualitySettings() {
               }`}
             >
               <span
-                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all ${
+                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.75 transition-all ${
                   force60fps ? "right-1" : "left-1"
                 }`}
               />
@@ -90,7 +90,7 @@ export default function YoutubeQualitySettings() {
               }`}
             >
               <span
-                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all ${
+                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.75 transition-all ${
                   disableAmbient ? "right-1" : "left-1"
                 }`}
               />

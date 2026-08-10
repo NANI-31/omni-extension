@@ -93,7 +93,31 @@ function processPost(article) {
     btnContainer.style.color = 'currentColor';
   }
 
-  btnContainer.innerHTML = DOWNLOAD_ICON_SVG;
+function setSafeHTML(element, html) {
+  if (!element) return;
+  if (window.trustedTypes && typeof window.trustedTypes.createPolicy === "function") {
+    try {
+      if (!window.__omniTrustedPolicy) {
+        window.__omniTrustedPolicy = window.trustedTypes.createPolicy("omniPolicy", {
+          createHTML: (s) => s,
+        });
+      }
+      element.innerHTML = window.__omniTrustedPolicy.createHTML(html);
+      return;
+    } catch (e) {}
+  }
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    element.replaceChildren(...doc.body.childNodes);
+  } catch (err) {
+    try {
+      element.innerHTML = html;
+    } catch (e) {}
+  }
+}
+
+  setSafeHTML(btnContainer, DOWNLOAD_ICON_SVG);
   const postId = getPostId(article);
   btnContainer.setAttribute('data-post-id', postId);
   // Also stamp the article itself so injected.js can uniquely find it
@@ -119,7 +143,7 @@ function processPost(article) {
     e.stopPropagation();
 
     // Show loading spinner
-    btnContainer.innerHTML = LOADING_ICON_SVG;
+    setSafeHTML(btnContainer, LOADING_ICON_SVG);
 
     let username = getUsername(article);
     const postId = btnContainer.getAttribute('data-post-id') || getPostId(article);
@@ -216,20 +240,21 @@ function processPost(article) {
         throw new Error("Failed to extract media URL");
       }
 
-      const success = await downloadMediaList(mediaList, username, finalPostId, captionText);
+      const success = await downloadMediaList(mediaList, username, finalPostId, captionText, btnContainer);
+
       if (success) {
-        btnContainer.innerHTML = SUCCESS_ICON_SVG;
+        setSafeHTML(btnContainer, SUCCESS_ICON_SVG);
         setTimeout(() => {
-          btnContainer.innerHTML = DOWNLOAD_ICON_SVG;
+          setSafeHTML(btnContainer, DOWNLOAD_ICON_SVG);
         }, 2000);
       } else {
         throw new Error("Download failed");
       }
 
     } catch (error) {
-      btnContainer.innerHTML = ERROR_ICON_SVG;
+      setSafeHTML(btnContainer, ERROR_ICON_SVG);
       setTimeout(() => {
-        btnContainer.innerHTML = DOWNLOAD_ICON_SVG;
+        setSafeHTML(btnContainer, DOWNLOAD_ICON_SVG);
       }, 3000);
     } finally {
       article.classList.remove('instagrab-active-target');
@@ -260,9 +285,21 @@ function scanDOM() {
 
 // Observe DOM mutations to scan when scrolling or switching views
 let scanTimeout = null;
+let isObserving = false; // debounce guard: prevents stacking duplicate MutationObservers
 const observer = new MutationObserver(() => {
   if (scanTimeout) clearTimeout(scanTimeout);
   scanTimeout = setTimeout(scanDOM, 300);
+});
+
+// quickUnsend storage listener — registered once at module load, not per initializeDownloader call
+chrome.storage.local.get(["quickUnsendEnabled"], (result) => {
+  if (result.quickUnsendEnabled) setupChatUnsendObserver();
+});
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && changes.quickUnsendEnabled) {
+    if (changes.quickUnsendEnabled.newValue) setupChatUnsendObserver();
+    else stopChatUnsendObserver();
+  }
 });
 
 // Delay observer start and initial scan to prevent React hydration mismatches (Error #418)
@@ -270,19 +307,10 @@ function initializeDownloader() {
   injectCustomStyles();
   injectMainWorldScript();
 
-  // Sync state for Quick Unsend
-  chrome.storage.local.get(["quickUnsendEnabled"], (result) => {
-    if (result.quickUnsendEnabled) setupChatUnsendObserver();
-  });
-
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === 'local' && changes.quickUnsendEnabled) {
-      if (changes.quickUnsendEnabled.newValue) setupChatUnsendObserver();
-      else stopChatUnsendObserver();
-    }
-  });
+  if (isObserving) return; // already running — rapid re-enable guard
 
   setTimeout(() => {
+    isObserving = true;
     observer.observe(document.body, {
       childList: true,
       subtree: true
@@ -291,14 +319,61 @@ function initializeDownloader() {
   }, 2500);
 }
 
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
+// ─── Active-module gate ───────────────────────────────────────────────────────
+// The extension's popup exposes a toggle for each module via
+// chrome.storage.local → activeModules.instagrab.
+// If the user turns off InstaGrab, this script must immediately stop:
+//   • disconnect the MutationObserver (no new buttons injected)
+//   • remove all already-injected buttons from the DOM
+//   • stop intercepting clicks
+// If they turn it back on, everything reconnects without a page refresh.
+
+let instagrabEnabled = true;  // optimistic default; corrected by first storage read
+
+function enableInstagrab() {
+  instagrabEnabled = true;
   initializeDownloader();
-} else {
-  window.addEventListener('load', initializeDownloader);
 }
+
+function disableInstagrab() {
+  instagrabEnabled = false;
+  // Disconnect observer so no new buttons are injected
+  observer.disconnect();
+  isObserving = false; // reset so re-enable can re-attach cleanly
+  if (scanTimeout) { clearTimeout(scanTimeout); scanTimeout = null; }
+  // Remove every already-injected download button from the DOM
+  document.querySelectorAll('.instagrab-download-btn').forEach(el => el.remove());
+  // Remove injected stylesheet (re-injected on re-enable)
+  document.getElementById('instagrab-custom-styles')?.remove();
+}
+
+// Listen for real-time toggle changes (popup flips the switch)
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !changes.activeModules) return;
+  const isNowEnabled = !!changes.activeModules.newValue?.instagrab;
+  const wasPreviouslyEnabled = !!changes.activeModules.oldValue?.instagrab;
+  if (isNowEnabled && !wasPreviouslyEnabled) enableInstagrab();
+  else if (!isNowEnabled && wasPreviouslyEnabled) disableInstagrab();
+});
+
+// Read the initial state, then start (or stay idle) accordingly
+chrome.storage.local.get(['activeModules'], (result) => {
+  const modules = result.activeModules || {};
+  // activeModules.instagrab defaults to true if never set (fresh install)
+  const enabled = modules.instagrab !== false;
+  instagrabEnabled = enabled;
+  if (enabled) {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      initializeDownloader();
+    } else {
+      window.addEventListener('load', initializeDownloader);
+    }
+  }
+});
 
 // Global click listener to intercept clicks on post media (feed & chat DMs)
 document.addEventListener('click', async (e) => {
+  if (!instagrabEnabled) return;          // module is toggled off
   if (!settings.clickToDownloadEnabled) return;
 
   const target = e.target;

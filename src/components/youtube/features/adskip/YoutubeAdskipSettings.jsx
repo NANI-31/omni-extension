@@ -41,7 +41,7 @@ export default function YoutubeAdskipSettings() {
               }`}
             >
               <span
-                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all ${
+                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.75 transition-all ${
                   autoSkip ? "right-1" : "left-1"
                 }`}
               />
@@ -67,7 +67,7 @@ export default function YoutubeAdskipSettings() {
               }`}
             >
               <span
-                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all ${
+                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.75 transition-all ${
                   accelerateAds ? "right-1" : "left-1"
                 }`}
               />
@@ -93,7 +93,7 @@ export default function YoutubeAdskipSettings() {
               }`}
             >
               <span
-                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all ${
+                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.75 transition-all ${
                   hideBanners ? "right-1" : "left-1"
                 }`}
               />

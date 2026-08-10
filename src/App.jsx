@@ -3,26 +3,37 @@ import { Provider, useSelector, useDispatch } from "react-redux";
 import { store } from "./store/index.js";
 import { navigateTo, toggleModule, setActiveModules } from "./store/featuresSlice.js";
 import { extensionModules } from "./config/modules.js";
+import ModuleCard from "./components/ModuleCard";
+import DashboardHeader from "./components/DashboardHeader";
+import SearchBar from "./components/SearchBar";
+import FeaturePanel from "./components/FeaturePanel";
+import SectionHeader from "./components/ui/SectionHeader";
+import GlassButton from "./components/ui/GlassButton";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
-// InstaGrab Components
-import Header from "./components/instagrab/Header.jsx";
-import TabSwitcher from "./components/instagrab/TabSwitcher.jsx";
-import DownloadsTab from "./components/instagrab/DownloadsTab.jsx";
-import SettingsTab from "./components/instagrab/SettingsTab.jsx";
-
-// Other Idea Components
-import TimersTab from "./components/timers/TimersTab.jsx";
-import YoutubeTab from "./components/youtube/YoutubeTab.jsx";
-import VpnTab from "./components/vpn/VpnTab.jsx";
+// Lazy-loaded feature tab components (Code-Splitting for sub-200kB popup chunks)
+const InstagramTab = React.lazy(() => import("./components/instagrab/InstagramTab.jsx"));
+const TimersTab    = React.lazy(() => import("./components/timers/TimersTab.jsx"));
+const YoutubeTab   = React.lazy(() => import("./components/youtube/YoutubeTab.jsx"));
+const VpnTab       = React.lazy(() => import("./components/vpn/VpnTab.jsx"));
+const PinterestTab = React.lazy(() => import("./components/pinterest/PinterestTab.jsx"));
 
 import { SettingsProvider } from "./context/SettingsContext.jsx";
-import { HistoryProvider } from "./context/HistoryContext.jsx";
 import { motion, AnimatePresence } from "framer-motion";
+
+const TabLoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center py-16 gap-3 text-zinc-400">
+    <div className="w-8 h-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
+    <span className="text-xs font-semibold tracking-wider uppercase text-zinc-500">Loading feature module...</span>
+  </div>
+);
+
 
 function AppContent() {
   const dispatch = useDispatch();
   const { currentFeature, activeModules } = useSelector((state) => state.features);
-  const [activeTab, setActiveTab] = useState("downloads");
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   // Sync activeModules with chrome storage on load
   useEffect(() => {
@@ -36,7 +47,7 @@ function AppContent() {
   }, [dispatch]);
 
   const handleToggleModule = (moduleId, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     const updated = {
       ...activeModules,
       [moduleId]: !activeModules[moduleId]
@@ -47,208 +58,272 @@ function AppContent() {
     }
   };
 
+  const filteredModules = extensionModules.filter((mod) => {
+    const matchesSearch =
+      mod.name.toLowerCase().includes(search.toLowerCase()) ||
+      mod.description.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "All" || mod.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
-    <div className="w-full h-screen bg-black-900 text-zinc-100 flex flex-col font-sans select-none overflow-hidden">
-      {/* Header Area */}
-      <div className="border-b border-zinc-900/50 bg-black/60 backdrop-blur-md sticky top-0 z-50 shrink-0">
-        <div className="max-w-full mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {currentFeature !== "dashboard" && (
-              <button
-                onClick={() => dispatch(navigateTo("dashboard"))}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-all text-sm font-semibold cursor-pointer"
-              >
-                <span>←</span> Launcher Dashboard
-              </button>
-            )}
-            {currentFeature === "instagrab" ? (
-              <Header />
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🛠️</span>
-                <span className="font-bold text-zinc-200 text-base tracking-tight">Omni Extension Hub</span>
-              </div>
-            )}
-          </div>
-          <span className="text-xs text-zinc-650 bg-zinc-900/60 px-2.5 py-1 rounded-full border border-zinc-900/80 font-mono uppercase tracking-wider">
-            Multi-Extension Mode
-          </span>
-        </div>
+    <div className="relative min-h-screen overflow-hidden bg-[#0a0b10] text-zinc-100">
+
+      {/* Background Ambient Layers */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 left-1/2 h-140 w-140 -translate-x-1/2 rounded-full bg-violet-600/8 blur-[140px]" />
+        <div className="absolute right-0 top-40 h-100 w-100 rounded-full bg-cyan-500/6 blur-[130px]" />
+        <div className="absolute bottom-0 left-0 h-120 w-120 rounded-full bg-fuchsia-500/6 blur-[150px]" />
+        <div
+          className="absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+          }}
+        />
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 max-w-full w-full mx-auto p-6 md:py-8 overflow-y-auto">
-        <AnimatePresence mode="wait">
-          {currentFeature === "dashboard" ? (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="space-y-6"
-            >
-               {/* Dashboard Jumbotron */}
-              <div className="text-center py-4 space-y-2">
-                <h2 className="text-2xl font-bold bg-linear-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
-                  Extension Script Hub
-                </h2>
-                <p className="text-sm text-zinc-400 max-w-md mx-auto leading-relaxed">
-                  Manage and customize active extension modules. Toggle modules on/off globally or click configure to adjust granular options.
-                </p>
-              </div>
+      {/* Main Content */}
+      <div className="relative z-10 flex h-screen flex-col">
+        {/* Header */}
+        <DashboardHeader
+          currentFeature={currentFeature}
+          onBack={() => dispatch(navigateTo("dashboard"))}
+        />
+        {/* Scroll Area */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-full px-6 py-6">
+            <AnimatePresence mode="wait">
+              {currentFeature === "dashboard" ? (
+                <motion.div
+                  key="dashboard"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-6"
+                >
+                  {/* Hero */}
+                  <section className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-[#131520] p-6 shadow-xl">
+                    <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-violet-500/10 blur-[100px] pointer-events-none" />
+                    <div className="relative">
+                      <span className="rounded-full border border-violet-500/30 bg-violet-500/15 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-violet-300">
+                        Browser Productivity Suite
+                      </span>
+                      <h1 className="mt-3 text-3xl font-extrabold tracking-tight leading-tight text-white">
+                        Manage Every{" "}
+                        <span className="bg-linear-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
+                          Extension
+                        </span>{" "}
+                        From One Place
+                      </h1>
+                      <p className="mt-2 max-w-xl text-xs leading-relaxed text-zinc-400">
+                        Configure every installed module, customize behaviors,
+                        monitor running services and instantly switch between tools.
+                      </p>
+                    </div>
+                  </section>
 
-              {/* Grid Layout */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                {extensionModules.map((mod) => {
-                  const isEnabled = !!activeModules[mod.id];
-                  return (
-                    <div
-                      key={mod.id}
-                      onClick={() => dispatch(navigateTo(mod.id))}
-                      className="group relative bg-black/60 hover:bg-black/40 border border-black rounded-xl p-5 cursor-pointer transition-all duration-300 overflow-hidden flex flex-col justify-between"
-                    >
-                      <div className="space-y-3">
-                        {/* Upper row: Icon and switch */}
-                        <div className="flex justify-between items-start">
-                          <div className={`w-10 h-10 rounded-lg bg-linear-to-br ${mod.color} flex items-center justify-center text-lg shadow-lg group-hover:scale-105 transition-transform duration-300`}>
-                            {mod.icon}
-                          </div>
-                          
-                          {/* Enable/Disable Switch */}
-                          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                            <span className={`text-xs font-bold uppercase tracking-wider ${isEnabled ? "text-emerald-400" : "text-zinc-650"}`}>
-                              {isEnabled ? "Active" : "Disabled"}
-                            </span>
-                            <button
-                              onClick={(e) => handleToggleModule(mod.id, e)}
-                              className={`w-9 h-5 rounded-full transition-colors relative cursor-pointer ${
-                                isEnabled ? "bg-emerald-500" : "bg-zinc-800 border border-zinc-700/50"
-                              }`}
-                            >
-                              <span
-                                className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.5 transition-transform ${
-                                  isEnabled ? "right-0.5" : "left-0.5"
-                                }`}
-                              />
-                            </button>
-                          </div>
+                  {/* Stats */}
+                  <section className="grid gap-3.5 sm:grid-cols-2 md:grid-cols-4">
+                    <div className="rounded-2xl border border-violet-500/25 bg-[#141624] p-4 backdrop-blur-xl flex flex-col justify-between shadow-lg">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/20 text-violet-300 text-sm font-bold">
+                          🧩
                         </div>
-
-                        {/* Title & Desc */}
                         <div>
-                          <h3 className="text-base font-bold text-zinc-200 group-hover:text-white transition-colors">
-                            {mod.name}
-                          </h3>
-                          <p className="text-xs text-zinc-555 mt-1 leading-normal">
-                            {mod.description}
-                          </p>
+                          <p className="text-xs font-bold text-white">Modules</p>
+                          <p className="text-[10px] text-zinc-400">Installed tools</p>
                         </div>
                       </div>
-
-                      {/* Footer Actions */}
-                      <div className="mt-5 pt-3 border-t border-zinc-900/60 flex justify-between items-center text-xs font-bold text-zinc-450 group-hover:text-zinc-300">
-                        <span>Status: {isEnabled ? "Injected" : "Inactive"}</span>
-                        <span className="text-purple-400 group-hover:translate-x-0.5 transition-transform">
-                          Configure →
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key={currentFeature}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-            >
-              {/* Feature Panel View */}
-              {currentFeature === "instagrab" && (
-                <div className="space-y-6">
-                  {/* Desktop Dual-Pane Layout */}
-                  <div className="hidden md:grid md:grid-cols-12 gap-8 items-start">
-                    {/* Left Pane: Settings */}
-                    <div className="col-span-7 space-y-4 bg-zinc-900/20 border border-zinc-900 rounded-xl p-6 shadow-2xl backdrop-blur-md">
-                      <div className="flex items-center gap-2.5 border-b border-zinc-800/80 pb-3 mb-2">
-                        <span className="text-base">⚙️</span>
-                        <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                          InstaGrab Settings
-                        </h2>
-                      </div>
-                      <SettingsTab />
+                      <h2 className="mt-3 text-2xl font-black text-white">
+                        {extensionModules.length}
+                      </h2>
                     </div>
 
-                    {/* Right Pane: Downloads */}
-                    <div className="col-span-5 space-y-4 bg-zinc-900/20 border border-zinc-900 rounded-xl p-6 shadow-2xl backdrop-blur-md">
-                      <div className="flex items-center gap-2.5 border-b border-zinc-800/80 pb-3 mb-2">
-                        <span className="text-base">📥</span>
-                        <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                          Download History
-                        </h2>
-                      </div>
-                      <DownloadsTab />
+                    <div className="rounded-2xl border border-emerald-500/30 bg-[#10221A] p-4 flex flex-col justify-between shadow-lg">
+                      <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Active</p>
+                      <h2 className="mt-3 text-2xl font-black text-emerald-400">
+                        {Object.values(activeModules).filter(Boolean).length}
+                      </h2>
                     </div>
+
+                    <div className="rounded-2xl border border-rose-500/30 bg-[#221217] p-4 flex flex-col justify-between shadow-lg">
+                      <p className="text-xs font-bold text-rose-400 uppercase tracking-wider">Disabled</p>
+                      <h2 className="mt-3 text-2xl font-black text-rose-400">
+                        {extensionModules.length -
+                          Object.values(activeModules).filter(Boolean).length}
+                      </h2>
+                    </div>
+
+                    <div className="rounded-2xl border border-cyan-500/30 bg-[#0F1E28] p-4 flex flex-col justify-between shadow-lg">
+                      <p className="text-xs font-bold text-cyan-400 uppercase tracking-wider">Workspace</p>
+                      <h2 className="mt-3 text-2xl font-black text-cyan-300">Ready</h2>
+                    </div>
+                  </section>
+
+                  {/* Search and Filters */}
+                  <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <SearchBar value={search} onChange={setSearch} />
+                    <div className="flex flex-wrap gap-2">
+                      {["All", "Media", "Productivity", "Downloads", "Utilities"].map(
+                        (item) => (
+                          <button
+                            key={item}
+                            onClick={() => setSelectedCategory(item)}
+                            className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
+                              selectedCategory === item
+                                ? "border-violet-500 bg-violet-600/30 text-white shadow-md shadow-violet-600/20"
+                                : "border-zinc-800 bg-[#141620] text-zinc-400 hover:border-zinc-700 hover:text-white"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </section>
+
+                  {/* Module Grid */}
+                  <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {filteredModules.map((mod) => (
+                      <ModuleCard
+                        key={mod.id}
+                        mod={mod}
+                        isEnabled={!!activeModules[mod.id]}
+                        onNavigate={() => dispatch(navigateTo(mod.id))}
+                        onToggle={() => handleToggleModule(mod.id)}
+                      />
+                    ))}
+                  </section>
+                </motion.div>
+
+
+                        ) : (
+              <motion.div
+                key={currentFeature}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.25 }}
+              >
+                {/* Workspace Container */}
+                {/* <div className="relative overflow-hidden rounded-4xl border border-white/10 bg-linear-to-br from-zinc-900/90 via-zinc-900/70 to-black/80 shadow-2xl backdrop-blur-2xl"> */}
+                  {/* Decorative Glow */}
+                  <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-violet-500/10 blur-[140px]" />
+                  {/* Content */}
+                  <div className="relative p-4">
+                    <ErrorBoundary name={currentFeature || "FeaturePanel"}>
+                      <React.Suspense fallback={<TabLoadingFallback />}>
+                        {currentFeature === "youtube" && (
+                          <FeaturePanel
+                            icon="🎬"
+                            title="YouTube Toolkit"
+                            description="Advanced playback controls and customization"
+                            currentFeature={currentFeature}
+                          >
+                            <YoutubeTab />
+                          </FeaturePanel>
+                        )}
+                        {currentFeature === "vpn" && (
+                          <FeaturePanel
+                            icon="🛡️"
+                            title="VPN Manager"
+                            description="Secure connections and privacy controls"
+                          >
+                            <VpnTab />
+                          </FeaturePanel>
+                        )}
+                        {currentFeature === "instagrab" && (
+                          <FeaturePanel
+                            icon="📸"
+                            title="Instagram Downloader"
+                            description="Download photos and videos from Instagram"
+                            currentFeature={currentFeature}
+                          >
+                            <InstagramTab />
+                          </FeaturePanel>
+                        )}
+                        {currentFeature === "timers" && (
+                          <FeaturePanel
+                            icon="⏱️"
+                            title="Timers & Alarms"
+                            description="Productivity timers and countdowns"
+                            currentFeature={currentFeature}
+                          >
+                            <TimersTab />
+                          </FeaturePanel>
+                        )}
+                        {currentFeature === "pinterest" && (
+                          <FeaturePanel
+                            icon="📌"
+                            title="Pinterest"
+                            description="Pinterest features"
+                            currentFeature={currentFeature}
+                          >
+                            <PinterestTab />
+                          </FeaturePanel>
+                        )}
+                      </React.Suspense>
+                    </ErrorBoundary>
                   </div>
 
-                  {/* Mobile Single-Pane Tab Content */}
-                  <div className="md:hidden space-y-4">
-                    <div className="border-b border-zinc-900/30 bg-zinc-900/10">
-                      <TabSwitcher activeTab={activeTab} setActiveTab={setActiveTab} />
-                    </div>
-                    {activeTab === "downloads" ? <DownloadsTab /> : <SettingsTab />}
-                  </div>
-                </div>
-              )}
-
-
-
-              {currentFeature === "timers" && (
-                <div className="max-w-xl mx-auto bg-zinc-900/20 border border-zinc-900 rounded-xl p-6 shadow-2xl backdrop-blur-md">
-                  <div className="flex items-center gap-2.5 border-b border-zinc-800/80 pb-3 mb-4">
-                    <span className="text-base">⏳</span>
-                    <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                      Bypass Timers
-                    </h2>
-                  </div>
-                  <TimersTab />
-                </div>
-              )}
-
-              {currentFeature === "youtube" && (
-                <div className="space-y-6">
-                  <YoutubeTab />
-                </div>
-              )}
-
-              {currentFeature === "vpn" && (
-                <div className="space-y-6">
-                  <VpnTab />
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+                {/* </div> */}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
 
       {/* Footer */}
-      {/* <footer className="py-4 border-t border-black/60 bg-black/60 text-center text-[10px] text-zinc-500 font-medium shrink-0">
-        Developed for local use • Version 1.0.0
+      {/* <footer className="border-t border-white/5 bg-black/20 backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-8">
+          <div>
+            <h3 className="font-semibold text-zinc-200">
+              Omni Extension Hub
+            </h3>
+            <p className="text-sm text-zinc-500">
+              Unified browser productivity workspace
+            </p>
+          </div>
+          <div className="flex items-center gap-8">
+            <div className="text-center">
+              <p className="text-xs uppercase tracking-widest text-zinc-500">
+                Build
+              </p>
+              <p className="mt-1 text-sm font-semibold">
+                Local
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs uppercase tracking-widest text-zinc-500">
+                Version
+              </p>
+              <p className="mt-1 text-sm font-semibold">
+                1.0.0
+              </p>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+              <span className="text-sm font-medium text-emerald-300">
+                All Systems Operational
+              </span>
+            </div>
+          </div>
+        </div>
       </footer> */}
     </div>
-  );
+  </div>
+);
 }
 
 export default function App() {
   return (
     <Provider store={store}>
       <SettingsProvider>
-        <HistoryProvider>
-          <AppContent />
-        </HistoryProvider>
+        <AppContent />
       </SettingsProvider>
     </Provider>
   );

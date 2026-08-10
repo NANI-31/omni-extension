@@ -144,7 +144,7 @@ export default function YoutubeSpeedSettings({
               }`}
             >
               <span
-                className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition-all duration-300 shadow-md ${
+                className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 transition-all duration-300 shadow-md ${
                   hotkeyHold2x ? "right-1" : "left-1"
                 }`}
               />
@@ -235,7 +235,7 @@ export default function YoutubeSpeedSettings({
               }`}
             >
               <span
-                className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition-all duration-300 shadow-md ${
+                className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 transition-all duration-300 shadow-md ${
                   allowOverdrive ? "right-1" : "left-1"
                 }`}
               />
@@ -300,7 +300,7 @@ export default function YoutubeSpeedSettings({
           >
             {/* Top Indicator bar */}
             <div className="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white z-10">
-              <span className="text-xs font-semibold truncate max-w-[180px]">
+              <span className="text-xs font-semibold truncate max-w-45">
                 {isFocused ? "🔴 Interactive (Shortcuts active)" : "Click to test hotkeys"}
               </span>
               <span className="text-[11px] bg-red-655 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
@@ -318,7 +318,7 @@ export default function YoutubeSpeedSettings({
 
               {/* Speed HUD Overlay */}
               <div
-                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-zinc-900/90 border rounded-xl p-3 flex flex-col items-center gap-1.5 text-white pointer-events-none transition-all duration-200 select-none w-[90px] shadow-2xl ${
+                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-zinc-900/90 border rounded-xl p-3 flex flex-col items-center gap-1.5 text-white pointer-events-none transition-all duration-200 select-none w-22.5 shadow-2xl ${
                   mockSpeed > 8.0 ? "yt-hud-overdrive-active" : ""
                 } ${
                   hudVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"

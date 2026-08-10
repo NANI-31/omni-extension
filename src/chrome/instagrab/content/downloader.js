@@ -119,26 +119,89 @@ function getFormattedSize(dataUrl) {
   }
 }
 
-export async function downloadMediaList(mediaList, username, postId, captionText) {
+export async function downloadMediaList(mediaList, username, postId, captionText, btnContainer = null) {
   let downloadCount = 0;
   let failCount = 0;
 
+  // Helper: update the button label during FFmpeg encoding.
+  // phase: 'image' | 'video' — shown with contextual icon and duration hint.
+function setSafeHTML(element, html) {
+  if (!element) return;
+  if (window.trustedTypes && typeof window.trustedTypes.createPolicy === "function") {
+    try {
+      if (!window.__omniTrustedPolicy) {
+        window.__omniTrustedPolicy = window.trustedTypes.createPolicy("omniPolicy", {
+          createHTML: (s) => s,
+        });
+      }
+      element.innerHTML = window.__omniTrustedPolicy.createHTML(html);
+      return;
+    } catch (e) {}
+  }
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    element.replaceChildren(...doc.body.childNodes);
+  } catch (err) {
+    try {
+      element.innerHTML = html;
+    } catch (e) {}
+  }
+}
+
+  function setProgressLabel(segment, totalSegments, phase) {
+    if (!btnContainer) return;
+
+    const isVideo = phase === 'video';
+    const icon    = isVideo ? '\uD83C\uDFAC' : '\uD83D\uDCF7'; // 🎬 or 📷
+    const label   = isVideo ? 'Video' : 'Photo';
+    const hint    = isVideo
+      ? 'full'
+      : `${settings.slideDurationSecs ?? 2}s`;
+
+    setSafeHTML(btnContainer, `
+      <span style="
+        display:inline-flex;align-items:center;gap:4px;
+        font-size:11px;font-weight:700;font-family:Roboto,Arial,sans-serif;
+        color:currentColor;white-space:nowrap;
+      ">
+        <svg style="width:13px;height:13px;animation:instagrab-spin 1s linear infinite;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10" stroke-opacity="0.2"/>
+          <path d="M12 2 a10 10 0 0 1 10 10" stroke-linecap="round"/>
+        </svg>
+        <span>${icon}</span>
+        <span>${label} ${segment}/${totalSegments}</span>
+        <span style="opacity:0.6;font-weight:500">&middot; ${hint}</span>
+      </span>`);
+  }
+
   // 1. Slideshow compilation branch
-  const isImageOnlyCarousel = mediaList.length > 1 && mediaList.every(m => m.type === 'image');
-  if (settings.compileSlidesAsVideo && isImageOnlyCarousel) {
+  // Handles image-only, video-only, and mixed (image + video) carousels.
+  // Any multi-item post compiles into a single video when compileSlidesAsVideo is enabled.
+  const isAnyCarousel = mediaList.length > 1;
+  if (settings.compileSlidesAsVideo && isAnyCarousel) {
+
+
     try {
       let videoDataUrl, videoFilename;
       const startTime = performance.now();
 
       if (settings.slideshowEncoder === 'ffmpeg') {
         // MP4 via FFmpeg.wasm (offscreen document)
-        videoDataUrl = await compileSlideshowViaFFmpeg(mediaList, settings.slideDurationSecs, settings.slideshowQuality);
+        // onProgress fires before each segment encodes → updates button label "2/5"
+        videoDataUrl = await compileSlideshowViaFFmpeg(
+          mediaList,
+          settings.slideDurationSecs,
+          settings.slideshowQuality,
+          ({ segment, totalSegments, phase }) => setProgressLabel(segment, totalSegments, phase)
+        );
         videoFilename = `${username}_${postId}_slideshow.mp4`;
       } else {
         // WebM via Canvas + MediaRecorder
         videoDataUrl = await compileSlideshowToVideo(mediaList, settings.slideDurationSecs * 1000);
         videoFilename = `${username}_${postId}_slideshow.webm`;
       }
+
 
       const durationMs = Math.round(performance.now() - startTime);
       const sizeStr = getFormattedSize(videoDataUrl);
@@ -153,6 +216,26 @@ export async function downloadMediaList(mediaList, username, postId, captionText
       });
       if (success) downloadCount++; else failCount++;
     } catch (slideshowErr) {
+      // ── Special case: extension was reloaded while this tab was open ─────────
+      // "Extension context invalidated" means the content script belongs to an
+      // old extension version. Chrome invalidates the runtime context for all
+      // existing content scripts when the extension is reloaded/updated.
+      // The user just needs to refresh this tab — individual downloads won't
+      // work either because runtime.sendMessage is also broken in this state.
+      if (slideshowErr?.message?.includes('Extension context invalidated') ||
+          slideshowErr?.message?.includes('context invalidated')) {
+        logger.warn('[InstaGrab] Extension was reloaded — tab context is stale. Prompting user to refresh.');
+        if (btnContainer) {
+          setSafeHTML(btnContainer, `
+            <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;
+              font-weight:700;font-family:Roboto,Arial,sans-serif;color:currentColor;white-space:nowrap;">
+              🔄 Refresh tab to download
+            </span>`);
+        }
+        return; // don't attempt individual downloads — they'd also fail
+      }
+
+      // ── General compilation failure: fall back to individual downloads ────────
       logger.error('[InstaGrab] Slideshow compilation failed, falling back to individual downloads:', slideshowErr);
       for (let i = 0; i < mediaList.length; i++) {
         const item = mediaList[i];
@@ -172,6 +255,8 @@ export async function downloadMediaList(mediaList, username, postId, captionText
         if (ok) downloadCount++; else failCount++;
       }
     }
+
+
   } else {
     // 2. Normal per-item download loop
     for (let i = 0; i < mediaList.length; i++) {

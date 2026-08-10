@@ -5,7 +5,8 @@ const initialState = {
   activeModules: {
     instagrab: true,
     timers: true,
-    youtube: true
+    youtube: true,
+    pinterest: true,
   }
 };
 

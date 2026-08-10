@@ -6,12 +6,14 @@
   "permissions": [
     "downloads",
     "storage",
+    "alarms",
     "offscreen",
     "scripting",
     "webNavigation",
     "webRequest",
     "proxy"
   ],
+
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; object-src 'self';"
   },
@@ -28,6 +30,22 @@
     {
       "matches": ["https://*.instagram.com/*"],
       "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.pinterest.com/*",
+        "https://*.pinterest.co.uk/*",
+        "https://*.pinterest.ca/*",
+        "https://*.pinterest.de/*",
+        "https://*.pinterest.fr/*",
+        "https://*.pinterest.es/*",
+        "https://*.pinterest.it/*",
+        "https://*.pinterest.jp/*",
+        "https://*.pinterest.pt/*",
+        "https://*.pinterest.ru/*"
+      ],
+      "js": ["pinterest.js"],
       "run_at": "document_idle"
     },
     {

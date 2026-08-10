@@ -1,3 +1,4 @@
+// components/instagrab/InstagramTab.jsx
 import React from "react";
 import DownloadFolderSetting from "./settings/DownloadFolderSetting.jsx";
 import UnsendSetting from "./settings/UnsendSetting.jsx";
@@ -6,19 +7,21 @@ import SlideshowSetting from "./settings/SlideshowSetting.jsx";
 import LoggingControlSetting from "./settings/LoggingControlSetting.jsx";
 import DownloadTutorial from "./settings/DownloadTutorial.jsx";
 
-export default function SettingsTab() {
+export default function InstagramTab() {
   return (
     <div className="space-y-5">
       <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
         
         {/* 1. Subfolder Path Input (with built-in validation & context save) */}
         <DownloadFolderSetting />
-
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* 2. Chat Quick Unsend Toggle */}
         <UnsendSetting />
 
         {/* 3. Click to Download Toggle */}
         <ClickToDownloadSetting />
+        </div>
 
         {/* 4. Console Logging Controls */}
         <LoggingControlSetting />

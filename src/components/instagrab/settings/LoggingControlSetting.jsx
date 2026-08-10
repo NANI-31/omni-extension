@@ -10,7 +10,6 @@ export default function LoggingControlSetting() {
     let contentLogs = [];
     let bgLogs = [];
 
-    // 1. Fetch active tab content script logs
     try {
       if (typeof chrome !== "undefined" && chrome.tabs) {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -27,7 +26,6 @@ export default function LoggingControlSetting() {
       contentLogs = [`[Logs Collector Error] Failed to fetch active tab logs: ${e.message || e}`];
     }
 
-    // 2. Fetch background service worker logs
     try {
       if (typeof chrome !== "undefined" && chrome.runtime) {
         const resp = await chrome.runtime.sendMessage({ type: "GET_BACKGROUND_LOGS" });
@@ -41,7 +39,6 @@ export default function LoggingControlSetting() {
       bgLogs = [`[Logs Collector Error] Failed to fetch background logs: ${e.message || e}`];
     }
 
-    // 3. Assemble full text log file
     const timestamp = new Date().toISOString().replace("T", " ").replace(/\..+/, "");
     const header = `=========================================\nInstaGrab Session Logs — ${timestamp}\n=========================================\n\n`;
     
@@ -50,7 +47,6 @@ export default function LoggingControlSetting() {
     
     const fullLogText = header + backgroundSection + contentSection;
 
-    // 4. Trigger download
     const blob = new Blob([fullLogText], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -68,43 +64,43 @@ export default function LoggingControlSetting() {
   ];
 
   return (
-    <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-3 space-y-3">
+    <div className="rounded-xl border border-zinc-800 bg-[#161824] p-4.5 space-y-3.5 shadow-lg">
       <div className="space-y-1">
-        <label className="text-xs font-semibold text-zinc-300 block">
+        <label className="text-xs font-bold text-white uppercase tracking-wider block">
           Console Debug Logging
         </label>
-        <span className="text-[10px] text-zinc-500 block leading-relaxed">
+        <span className="text-xs text-zinc-400 block leading-relaxed">
           Configure console prints or export session logs directly to a text file for troubleshooting.
         </span>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         {levels.map((lvl) => (
           <button
             key={lvl.value}
             type="button"
             onClick={() => setLogLevel(lvl.value)}
-            className={`flex-1 flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-md border text-[10px] font-semibold transition-all cursor-pointer ${
+            className={`flex-1 flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
               logLevel === lvl.value
-                ? "border-purple-500 bg-purple-500/10 text-purple-300"
-                : "border-zinc-800 bg-zinc-800/40 text-zinc-500 hover:border-zinc-700"
+                ? "border-fuchsia-500 bg-fuchsia-600/25 text-white shadow-md shadow-fuchsia-600/20"
+                : "border-zinc-700/80 bg-[#1b1e2e] text-zinc-300 hover:border-zinc-600 hover:text-white"
             }`}
           >
             <span>{lvl.label}</span>
-            <span className="text-[7.5px] font-normal opacity-60">{lvl.desc}</span>
+            <span className="text-[10px] font-medium opacity-75">{lvl.desc}</span>
           </button>
         ))}
       </div>
 
-      <div className="pt-2 border-t border-zinc-800/40 flex justify-between items-center gap-2">
-        <span className="text-[9px] text-zinc-500">
+      <div className="pt-2.5 border-t border-zinc-800 flex justify-between items-center gap-3">
+        <span className="text-xs text-zinc-400">
           Session logs are kept in-memory.
         </span>
         <button
           type="button"
           onClick={handleExportLogs}
           disabled={exporting}
-          className="bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-zinc-300 px-3 py-1.5 text-[10px] font-bold rounded cursor-pointer border border-zinc-700 transition-all flex items-center gap-1"
+          className="bg-fuchsia-600 hover:bg-fuchsia-500 active:scale-95 text-white px-3.5 py-1.5 text-xs font-bold rounded-xl cursor-pointer border-none transition-all shadow-md shadow-fuchsia-600/20 flex items-center gap-1.5"
         >
           <span>📥</span>
           <span>{exporting ? "Exporting..." : "Export Session Logs"}</span>

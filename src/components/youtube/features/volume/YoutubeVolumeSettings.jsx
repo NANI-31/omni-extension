@@ -61,7 +61,7 @@ export default function YoutubeVolumeSettings({
             }`}
           >
             <span
-              className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition-all duration-300 shadow-md ${
+              className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 transition-all duration-300 shadow-md ${
                 volumeControl ? "right-1" : "left-1"
               }`}
             />
@@ -125,7 +125,7 @@ export default function YoutubeVolumeSettings({
             }`}
           >
             <span
-              className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition-all duration-300 shadow-md ${
+              className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 transition-all duration-300 shadow-md ${
                 showHUD ? "right-1" : "left-1"
               }`}
             />
@@ -181,7 +181,7 @@ export default function YoutubeVolumeSettings({
             }`}
           >
             <span
-              className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition-all duration-300 shadow-md ${
+              className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 transition-all duration-300 shadow-md ${
                 defaultVolumeEnabled ? "right-1" : "left-1"
               }`}
             />

@@ -1,34 +1,65 @@
+import { COLOR_TOKENS } from "./tokens.js";
+
 export const extensionModules = [
   {
     id: "instagrab",
     name: "InstaGrab",
     description: "Download high-resolution posts, carousels, and stories.",
     icon: "📸",
-    color: "from-pink-500 to-purple-600",
-    glowColor: "rgba(236, 72, 153, 0.25)"
+    category: "Media",
+    color: COLOR_TOKENS.instagrab.gradient,
+    accentColor: COLOR_TOKENS.instagrab.primary,
+    borderColor: COLOR_TOKENS.instagrab.borderColor,
+    glowColor: COLOR_TOKENS.instagrab.glow,
+    badgeStyle: COLOR_TOKENS.instagrab.badgeStyle,
   },
   {
     id: "timers",
     name: "Bypass Timers",
     description: "Auto-skip shortlink redirects and countdown page timers.",
     icon: "⏳",
-    color: "from-emerald-500 to-teal-600",
-    glowColor: "rgba(16, 185, 129, 0.25)"
+    category: "Productivity",
+    color: COLOR_TOKENS.timers.gradient,
+    accentColor: COLOR_TOKENS.timers.primary,
+    borderColor: COLOR_TOKENS.timers.borderColor,
+    glowColor: COLOR_TOKENS.timers.glow,
+    badgeStyle: COLOR_TOKENS.timers.badgeStyle,
   },
   {
     id: "youtube",
     name: "Video Tools",
     description: "Scroll volume controls on YouTube, Udemy, and generic HTML5 video players.",
     icon: "📺",
-    color: "from-red-500 to-rose-600",
-    glowColor: "rgba(239, 68, 68, 0.25)"
+    category: "Media",
+    color: COLOR_TOKENS.youtube.gradient,
+    accentColor: COLOR_TOKENS.youtube.primary,
+    borderColor: COLOR_TOKENS.youtube.borderColor,
+    glowColor: COLOR_TOKENS.youtube.glow,
+    badgeStyle: COLOR_TOKENS.youtube.badgeStyle,
   },
   {
     id: "vpn",
     name: "Secure VPN Proxy",
     description: "Curated fast mock servers and fully functional custom proxy configuration client.",
     icon: "🔒",
-    color: "from-cyan-500 to-blue-600",
-    glowColor: "rgba(6, 182, 212, 0.25)"
-  }
+    category: "Utilities",
+    color: COLOR_TOKENS.vpn.gradient,
+    accentColor: COLOR_TOKENS.vpn.primary,
+    borderColor: COLOR_TOKENS.vpn.borderColor,
+    glowColor: COLOR_TOKENS.vpn.glow,
+    badgeStyle: COLOR_TOKENS.vpn.badgeStyle,
+  },
+  {
+    id: "pinterest",
+    name: "PinterestGrab",
+    description: "Download high-res photos and videos from Pinterest pins and boards.",
+    icon: "📌",
+    category: "Downloads",
+    color: COLOR_TOKENS.pinterest.gradient,
+    accentColor: COLOR_TOKENS.pinterest.primary,
+    borderColor: COLOR_TOKENS.pinterest.borderColor,
+    glowColor: COLOR_TOKENS.pinterest.glow,
+    badgeStyle: COLOR_TOKENS.pinterest.badgeStyle,
+  },
 ];
+

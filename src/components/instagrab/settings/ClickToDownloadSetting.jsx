@@ -1,3 +1,4 @@
+// 3. components/instagrab/settings/ClickToDownloadSetting.jsx
 import React from "react";
 import { useSettings } from "../../../context/SettingsContext.jsx";
 import ToggleCard from "./ToggleCard.jsx";

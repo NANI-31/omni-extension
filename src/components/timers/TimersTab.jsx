@@ -104,7 +104,7 @@ export default function TimersTab() {
             }`}
           >
             <span
-              className={`w-3.5 h-3.5 rounded-full bg-white absolute top-[3px] transition-all ${
+              className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.75 transition-all ${
                 fastForward ? "right-1" : "left-1"
               }`}
             />
@@ -171,7 +171,7 @@ export default function TimersTab() {
         </div>
 
         {/* List of active domains */}
-        <div className="max-h-[220px] overflow-y-auto pr-1 space-y-1.5 border border-zinc-900 bg-zinc-950/20 p-2.5 rounded-lg custom-scrollbar">
+        <div className="max-h-55 overflow-y-auto pr-1 space-y-1.5 border border-zinc-900 bg-zinc-950/20 p-2.5 rounded-lg custom-scrollbar">
           {filteredDomains.length === 0 ? (
             <p className="text-xs text-zinc-600 text-center py-4 italic">
               No matching domain patterns found.

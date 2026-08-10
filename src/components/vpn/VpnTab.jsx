@@ -426,7 +426,7 @@ export default function VpnTab() {
           </div>
 
           {/* ── Timer ── */}
-          <div className="text-center mt-6 space-y-1.5 min-h-[48px]">
+          <div className="text-center mt-6 space-y-1.5 min-h-12">
             <p className={`text-xl font-bold font-mono tracking-wider ${vpnConnected ? "text-cyan-400" : "text-zinc-600"}`}>
               {vpnConnected ? formatDuration(duration) : "00:00"}
             </p>
@@ -558,12 +558,12 @@ export default function VpnTab() {
                 <div className="flex flex-col items-center justify-center py-10 text-center space-y-3 border border-dashed border-zinc-800 rounded-xl">
                   <span className="text-4xl">🌍</span>
                   <p className="text-sm font-semibold text-zinc-400">No countries loaded</p>
-                  <p className="text-xs text-zinc-600 max-w-[220px] leading-relaxed">
+                  <p className="text-xs text-zinc-600 max-w-55 leading-relaxed">
                     Fetch proxies above — they'll automatically be geo-located and grouped by country.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1 no-scrollbar">
+                <div className="space-y-2 max-h-105 overflow-y-auto pr-1 no-scrollbar">
                   {countries.map((country) => {
                     const bestScore = country.proxies[0]?.healthScore;
                     const testedCount = country.proxies.filter((p) => p.healthScore !== null).length;
@@ -646,7 +646,7 @@ export default function VpnTab() {
                 <p className="text-xs text-zinc-500">Showing all {serversList.length} proxies. Select a country to filter.</p>
               )}
 
-              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 no-scrollbar">
+              <div className="space-y-2 max-h-100 overflow-y-auto pr-1 no-scrollbar">
                 {(selectedCountry ? currentCountryProxies : serversList.map((p) => ({
                   ...p,
                   healthScore: clientCalculateScore(proxyHealth[`${p.host}:${p.port}`])
