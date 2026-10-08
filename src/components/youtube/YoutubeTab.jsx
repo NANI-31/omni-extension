@@ -23,7 +23,7 @@ export default function YoutubeTab() {
 
   // Playback Speed States
   const [speedSensitivity, setSpeedSensitivity] = useState(0.25);
-  const [allowOverdrive, setAllowOverdrive] = useState(false);
+  const [allowOverdrive, setAllowOverdrive] = useState(true);
   const [hotkeyHold2x, setHotkeyHold2x] = useState(true);
   const [holdSpeedMult, setHoldSpeedMult] = useState(2.0);
   const [holdKey, setHoldKey] = useState("s");
@@ -127,6 +127,8 @@ export default function YoutubeTab() {
           }
           if (result.ytAllowOverdrive !== undefined) {
             setAllowOverdrive(result.ytAllowOverdrive);
+          } else {
+            setAllowOverdrive(true);
           }
           if (result.ytHotkeyHold2x !== undefined) {
             setHotkeyHold2x(result.ytHotkeyHold2x);
@@ -418,10 +420,10 @@ export default function YoutubeTab() {
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div className="h-full flex flex-col lg:grid lg:grid-cols-12 gap-8 items-stretch min-h-0">
       
-      {/* 1. Left Side Panel: Features Selector */}
-      <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-0">
+      {/* 1. Left Side Panel: Features Selector (Constant / Pinned Sidebar) */}
+      <div className="lg:col-span-3 space-y-4 shrink-0 lg:h-full lg:overflow-y-auto scrollbar-youtube pr-1 select-none">
         <YoutubeFeatureList
           features={features}
           selectedFeature={selectedFeature}
@@ -429,12 +431,12 @@ export default function YoutubeTab() {
         />
       </div>
 
-      {/* 2. Main Content View Pane */}
-      <div className="lg:col-span-9">
+      {/* 2. Main Content View Pane (Right Side Panel - Independently Scrollable) */}
+      <div className="lg:col-span-9 flex-1 min-h-0 h-full overflow-y-auto scrollbar-youtube pr-3 pb-8">
         {selectedFeature === "volume" && (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
             {/* Left Column: Settings configuration */}
-            <div className="md:col-span-7 max-h-[calc(100vh-140px)] overflow-y-auto pr-3 no-scrollbar">
+            <div className="md:col-span-7 space-y-6">
               <YoutubeVolumeSettings
                 volumeControl={volumeControl}
                 handleToggleVolumeControl={handleToggleVolumeControl}

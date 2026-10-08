@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import Toggle from "./ui/Toggle";
 import StatusBadge from "./ui/StatusBadge";
 import ModuleIcon from "./ui/ModuleIcon";
@@ -12,13 +11,13 @@ export default function ModuleCard({
   const borderColor = mod.borderColor || "border-zinc-800 hover:border-zinc-700";
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
+    <div
       onClick={onNavigate}
-      className={`group relative cursor-pointer overflow-hidden rounded-2xl border ${borderColor} bg-[#141620] p-5 shadow-sm transition-all duration-200 hover:shadow-lg hover:shadow-violet-500/10`}
+      style={{
+        "--mod-glow": mod.glowColor || "rgba(139, 92, 246, 0.35)",
+        "--mod-accent": mod.accentColor || "#8b5cf6",
+      }}
+      className={`group relative cursor-pointer overflow-hidden rounded-2xl border ${borderColor} bg-[#141620] p-5 shadow-sm module-card-hover`}
     >
       {/* Top Accent Bar */}
       <div
@@ -68,7 +67,7 @@ export default function ModuleCard({
       {/* Content */}
       <div className="relative mt-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-bold tracking-tight text-white transition group-hover:text-violet-300">
+          <h3 className="card-title text-base font-bold tracking-tight text-white transition-colors duration-200">
             {mod.name}
           </h3>
           {mod.category && (
@@ -96,11 +95,11 @@ export default function ModuleCard({
         </div>
 
         {/* Configure Button */}
-        <div className="flex items-center gap-1.5 rounded-xl border border-zinc-700/60 bg-zinc-800/60 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all group-hover:border-violet-500/50 group-hover:bg-violet-600/20 group-hover:text-white">
+        <div className="card-config-btn flex items-center gap-1.5 rounded-xl border border-zinc-700/60 bg-zinc-800/60 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all duration-200">
           Configure
           <span>→</span>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

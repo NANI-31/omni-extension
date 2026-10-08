@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 /**
  * Returns the correct storage object for the delete log.
@@ -28,7 +28,7 @@ export function relativeTime(timestamp) {
 export function useHistoryDeleteLog() {
   const [deleteLog, setDeleteLog]     = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [, setNow]                    = useState(Date.now());
+  const [, setNow]                    = useState(() => Date.now());
 
   // Refresh relative timestamps ticker every 30 seconds
   useEffect(() => {

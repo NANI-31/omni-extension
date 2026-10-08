@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "InstaGrab - Instagram Downloader",
+  "name": "Omni Extension",
   "version": "1.0.0",
-  "description": "Download high-resolution images, videos, and Reels directly from Instagram in one click.",
+  "description": "Unified browser productivity workspace featuring media downloaders, YouTube toolkit, timer bypass, and VPN controls.",
   "permissions": [
     "downloads",
     "storage",

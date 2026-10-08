@@ -64,6 +64,33 @@ html, body {
   scrollbar-width: none;  /* Firefox */
 }
 
+/* YouTube Brand Scrollbar with subtle glow accent */
+.scrollbar-youtube {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-youtube) transparent;
+}
+
+.scrollbar-youtube::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-youtube::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 9999px;
+}
+
+.scrollbar-youtube::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--brand-youtube), #b91c1c);
+  border-radius: 9999px;
+  box-shadow: 0 0 10px var(--brand-youtube-glow);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.scrollbar-youtube::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #f87171, var(--brand-youtube));
+  box-shadow: 0 0 16px var(--brand-youtube-glow);
+}
+
 /* Token Utility Classes */
 .token-card {
   background-color: var(--surface-card);
@@ -89,4 +116,25 @@ html, body {
 
 .token-glow-pinterest {
   box-shadow: 0 0 24px var(--brand-pinterest-glow);
+}
+
+/* Dynamic Extension Card Glowing Hover Effects */
+.module-card-hover {
+  transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.module-card-hover:hover {
+  box-shadow: 0 0px 5px -6px var(--mod-glow, rgba(139, 92, 246, 0.35)),
+              0 0 2px 0 var(--mod-glow, rgba(139, 92, 246, 0.2));
+}
+
+.module-card-hover:hover .card-title {
+  color: var(--mod-accent, #c4b5fd);
+}
+
+.module-card-hover:hover .card-config-btn {
+  border-color: var(--mod-glow, rgba(139, 92, 246, 0.5));
+  background-color: var(--mod-glow, rgba(139, 92, 246, 0.15));
+  color: #ffffff;
 }

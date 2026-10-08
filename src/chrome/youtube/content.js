@@ -60,7 +60,7 @@ function syncYoutubeSettings() {
       const ytDefaultStartupVolume = result.ytDefaultStartupVolume !== undefined ? Number(result.ytDefaultStartupVolume) : 30;
       
       const ytSpeedSensitivity = result.ytSpeedSensitivity !== undefined ? Number(result.ytSpeedSensitivity) : 0.25;
-      const ytAllowOverdrive = !!result.ytAllowOverdrive;
+      const ytAllowOverdrive = result.ytAllowOverdrive !== false;
       const ytHotkeyHold2x = result.ytHotkeyHold2x !== false;
       const ytHoldSpeedMult = result.ytHoldSpeedMult !== undefined ? Number(result.ytHoldSpeedMult) : 2.0;
       const ytHoldKey = result.ytHoldKey !== undefined ? String(result.ytHoldKey) : "s";

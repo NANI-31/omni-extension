@@ -18,7 +18,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
   chrome.storage.local.get(
     ["activeModules", "pinterestFolder", "ytZoneLeft", "ytZoneMiddle", "ytZoneRight", "ytZonesEnabled", "ytBrightnessSensitivity",
-     "ytHistoryDeleteEnabled", "ytHistoryDeletedCount", "ytHistoryDeleteDebug"],
+     "ytAllowOverdrive", "ytHistoryDeleteEnabled", "ytHistoryDeletedCount", "ytHistoryDeleteDebug"],
     (result) => {
       // Seed default YouTube scroll zone keys
       const zoneDefaults = {};
@@ -39,6 +39,8 @@ chrome.runtime.onInstalled.addListener(() => {
       if (result.ytFilterWhites === undefined)          zoneDefaults.ytFilterWhites = 100;
       if (result.ytFilterShadows === undefined)         zoneDefaults.ytFilterShadows = 0;
       if (result.ytFilterHighlights === undefined)      zoneDefaults.ytFilterHighlights = 0;
+      // Speed Overdrive default (up to 16x)
+      if (result.ytAllowOverdrive === undefined)        zoneDefaults.ytAllowOverdrive = true;
       // History Quick Delete defaults
       if (result.ytHistoryDeleteEnabled === undefined)   zoneDefaults.ytHistoryDeleteEnabled = true;
       if (result.ytHistoryDeletedCount === undefined)    zoneDefaults.ytHistoryDeletedCount = 0;
