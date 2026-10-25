@@ -61,6 +61,38 @@
     "paypal.com",
   ];
 
+  const KNOWN_POPUP_AD_DOMAINS = [
+    /popads\./i,
+    /propellerads\./i,
+    /adsterra\./i,
+    /exoclick\./i,
+    /bet365\./i,
+    /1xbet\./i,
+    /monetag\./i,
+    /hilltopads\./i,
+    /tsyndicate\./i,
+    /trafficjunky\./i,
+    /ad-maven\./i,
+    /onclickads\./i,
+    /adcash\./i,
+    /richpush\./i,
+    /clickadu\./i,
+    /juicyads\./i,
+    /ero-advertising\./i,
+    /trafficstars\./i,
+    /yadro\.ru/i,
+    /zeroredirect\./i,
+    /popunder/i,
+  ];
+
+  function isKnownAdUrl(urlStr) {
+    if (!urlStr || typeof urlStr !== "string") return false;
+    for (const pattern of KNOWN_POPUP_AD_DOMAINS) {
+      if (pattern.test(urlStr)) return true;
+    }
+    return false;
+  }
+
   function isAuthUrl(urlStr) {
     if (!urlStr || typeof urlStr !== "string") return false;
     const lower = urlStr.toLowerCase();
@@ -328,21 +360,18 @@
         return;
       }
 
-      // 2. Intercept third-party <a target="_blank"> popups
+      // 2. Intercept clickjacking trap overlays masquerading as <a> tags or verified ad domains
       for (const node of path) {
-        if (node && node.tagName === "A" && node.target === "_blank") {
+        if (node && node.tagName === "A") {
           const href = node.getAttribute("href") || node.href || "";
-          if (href && !isSameOriginUrl(href) && !isAuthUrl(href)) {
-            // Check if this anchor is an ad click trap or overlay
-            const isTrap = isClickTrapOverlay(node) || node.classList.contains("ad") || href.includes("redirect") || href.includes("aff_") || href.includes("track");
-            if (isTrap) {
-              event.stopImmediatePropagation();
-              event.preventDefault();
-              window.postMessage({ type: "OMNI_ADBLOCK_POPUP_BLOCKED", url: href }, "*");
-              window.postMessage({ type: "OMNI_ADBLOCK_POPUP_ATTEMPT" }, "*");
-              try { node.remove(); } catch (_) {}
-              return;
-            }
+          const isTrap = isClickTrapOverlay(node) || isKnownAdUrl(href);
+          if (isTrap) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            window.postMessage({ type: "OMNI_ADBLOCK_POPUP_BLOCKED", url: href }, "*");
+            window.postMessage({ type: "OMNI_ADBLOCK_POPUP_ATTEMPT" }, "*");
+            try { node.remove(); } catch (_) {}
+            return;
           }
         }
       }
@@ -350,34 +379,29 @@
     true
   );
 
-  // ── 6. Neutralize Programmatic <a target="_blank"> Clickjacking ─────────────
+  // ── 6. Neutralize Programmatic Ad Network Clickjacking ───────────────────────
   try {
     const originalAnchorClick = HTMLAnchorElement.prototype.click;
     HTMLAnchorElement.prototype.click = function () {
       if (isShieldActive) {
         const href = this.getAttribute("href") || this.href;
-        const target = this.getAttribute("target") || this.target;
-
-        if (target === "_blank" && href) {
-          if (!isSameOriginUrl(href) && !isAuthUrl(href)) {
-            window.postMessage({ type: "OMNI_ADBLOCK_POPUP_BLOCKED", url: href }, "*");
-            window.postMessage({ type: "OMNI_ADBLOCK_POPUP_ATTEMPT" }, "*");
-            return;
-          }
+        if (href && isKnownAdUrl(href)) {
+          window.postMessage({ type: "OMNI_ADBLOCK_POPUP_BLOCKED", url: href }, "*");
+          window.postMessage({ type: "OMNI_ADBLOCK_POPUP_ATTEMPT" }, "*");
+          return;
         }
       }
       return originalAnchorClick.apply(this, arguments);
     };
   } catch (_) {}
 
-  // ── 7. Neutralize Synthetic Event Dispatching on Anchors ──────────────────────
+  // ── 7. Neutralize Synthetic Event Dispatching on Ad Anchors ──────────────────
   try {
     const originalDispatch = EventTarget.prototype.dispatchEvent;
     EventTarget.prototype.dispatchEvent = function (event) {
       if (isShieldActive && event && event.type === "click" && this instanceof HTMLAnchorElement) {
-        const target = this.getAttribute("target") || this.target;
         const href = this.getAttribute("href") || this.href;
-        if (target === "_blank" && href && !isSameOriginUrl(href) && !isAuthUrl(href)) {
+        if (href && isKnownAdUrl(href)) {
           window.postMessage({ type: "OMNI_ADBLOCK_POPUP_BLOCKED", url: href }, "*");
           window.postMessage({ type: "OMNI_ADBLOCK_POPUP_ATTEMPT" }, "*");
           return false;

@@ -1,12 +1,12 @@
 // Omni Extension — Background Popup & Popunder Destroyer Engine
-// Targets intrusive popups, popunders, and clickjack redirects on untrusted websites
-// while guaranteeing 100% safety for legitimate user links (YouTube descriptions, search results, social feeds).
+// Protects against intrusive popups, popunders, and rogue ad tabs across ALL websites
+// without requiring any domain whitelists. Normal user link clicks across the entire web open freely.
 
-const POPUP_CHECK_WINDOW_MS = 2500; // 2.5s window after an in-page popup trap is triggered
+const POPUP_CHECK_WINDOW_MS = 2500; // 2.5s window after an unprompted clickjack trap is triggered
 const recentPopupAttempts = new Map(); // sourceTabId -> timestamp
 const potentialPopups = new Map(); // tabId -> { sourceTabId, sourceHost, createdAt, initialUrl }
 
-// Explicit ad networks and popunder delivery domains
+// Explicit ad delivery and popunder network domains (never false-positive normal websites)
 const KNOWN_POPUP_AD_DOMAINS = [
   /popads\./i,
   /propellerads\./i,
@@ -31,26 +31,6 @@ const KNOWN_POPUP_AD_DOMAINS = [
   /popunder/i,
 ];
 
-// Major platforms whose outbound user links must NEVER be blocked or closed
-const TRUSTED_SOURCE_PLATFORMS = [
-  "youtube.com",
-  "youtube-nocookie.com",
-  "google.com",
-  "github.com",
-  "instagram.com",
-  "twitter.com",
-  "x.com",
-  "reddit.com",
-  "facebook.com",
-  "wikipedia.org",
-  "linkedin.com",
-  "twitch.tv",
-  "discord.com",
-  "microsoft.com",
-  "apple.com",
-  "amazon.com",
-];
-
 // Legitimate SSO, OAuth, & payment providers
 const AUTH_DOMAINS = [
   "accounts.google.com",
@@ -69,12 +49,6 @@ const AUTH_DOMAINS = [
 function isAuthDomain(urlStr) {
   if (!urlStr) return false;
   return AUTH_DOMAINS.some((auth) => urlStr.includes(auth));
-}
-
-function isTrustedSource(sourceHost) {
-  if (!sourceHost) return false;
-  const lower = sourceHost.toLowerCase();
-  return TRUSTED_SOURCE_PLATFORMS.some((trusted) => lower === trusted || lower.endsWith("." + trusted));
 }
 
 function isKnownAdUrl(urlStr) {
@@ -115,7 +89,7 @@ function cleanExpiredEntries() {
 }
 
 /**
- * Record an in-page popup attempt signaled from content script
+ * Record an in-page popup attempt signaled from content script when a clickjack trap overlay is destroyed
  */
 export function recordInPagePopupAttempt(sourceTabId) {
   if (!sourceTabId) return;
@@ -123,22 +97,18 @@ export function recordInPagePopupAttempt(sourceTabId) {
 }
 
 /**
- * Checks whether a newly created tab is an ad/popunder and terminates it
+ * Checks whether a newly created tab is a rogue ad/popunder and terminates it.
+ * Legitimate user links clicked on ANY website on the internet will NEVER be closed.
  */
 async function checkAndDestroyPopup(tabId, url, sourceTabId, sourceHost) {
   if (!tabId || !url) return false;
 
-  // 1. Never close tabs if the adblocker module is turned off
+  // 1. Never close tabs if the adblocker module is disabled
   const isActive = await checkAdblockActive();
   if (!isActive) return false;
 
-  // 2. Never close tabs opened from trusted platforms (YouTube, Google, Reddit, etc.)
-  if (isTrustedSource(sourceHost)) return false;
-
-  // 3. Never close auth or OAuth logins
+  // 2. Never close auth, OAuth logins, internal or extension pages
   if (isAuthDomain(url)) return false;
-
-  // 4. Never close internal or extension pages
   if (url.startsWith("chrome://") || url.startsWith("chrome-extension://") || url.startsWith("about:")) {
     return false;
   }
@@ -147,13 +117,13 @@ async function checkAndDestroyPopup(tabId, url, sourceTabId, sourceHost) {
   let shouldDestroy = false;
   let reason = "";
 
-  // A. Direct match against verified popup/popunder ad networks
+  // A. Direct match against verified popup/popunder ad delivery networks
   if (isKnownAdUrl(urlLower)) {
     shouldDestroy = true;
-    reason = "Matched verified ad/popunder delivery network";
+    reason = "Destination matched verified ad/popunder delivery network";
   }
 
-  // B. Opener tab on an untrusted site had a clickjack popup trap triggered within the last 2.5s
+  // B. Opener tab had an unprompted transparent clickjack overlay trap triggered within the last 2.5s
   if (!shouldDestroy && sourceTabId && recentPopupAttempts.has(sourceTabId)) {
     const attemptTime = recentPopupAttempts.get(sourceTabId);
     if (Date.now() - attemptTime < POPUP_CHECK_WINDOW_MS) {
@@ -162,7 +132,7 @@ async function checkAndDestroyPopup(tabId, url, sourceTabId, sourceHost) {
         const targetHost = parsed.hostname.toLowerCase().replace(/^www\./, "");
         if (targetHost && sourceHost && targetHost !== sourceHost && !isAuthDomain(url)) {
           shouldDestroy = true;
-          reason = `Spawned during confirmed popup click trap from untrusted source ${sourceHost} to ${targetHost}`;
+          reason = `Spawned during confirmed clickjack trap from ${sourceHost} to ${targetHost}`;
         }
       } catch (_) {}
     }
@@ -172,7 +142,7 @@ async function checkAndDestroyPopup(tabId, url, sourceTabId, sourceHost) {
     potentialPopups.delete(tabId);
     try {
       await chrome.tabs.remove(tabId);
-      console.log(`[AdShield Popup Killer] Terminated popup tab ${tabId} (${url}) — Reason: ${reason}`);
+      console.log(`[AdShield Popup Killer] Terminated rogue ad tab ${tabId} (${url}) — Reason: ${reason}`);
 
       // Increment stats
       chrome.storage.local.get({ adblockBlockedCount: 0 }, (data) => {
@@ -205,9 +175,6 @@ export function initPopupBlocker() {
         }
       } catch (_) {}
     }
-
-    // Fast-path: if source is a trusted platform (e.g. YouTube), don't even track it
-    if (isTrustedSource(sourceHost)) return;
 
     potentialPopups.set(tabId, {
       sourceTabId,
