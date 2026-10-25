@@ -1,14 +1,13 @@
 // Omni Extension — Background Popup & Popunder Destroyer Engine
-// Inspired by AdBlock Plus (Eyeo GmbH) popup-blocker-service-worker.js
-// Intercepts navigation targets at the browser level and terminates popup tabs
-// via chrome.tabs.remove before they can render or distract the user.
+// Targets intrusive popups, popunders, and clickjack redirects on untrusted websites
+// while guaranteeing 100% safety for legitimate user links (YouTube descriptions, search results, social feeds).
 
-const POPUP_CHECK_WINDOW_MS = 2500; // 2.5s window after in-page popup attempt
+const POPUP_CHECK_WINDOW_MS = 2500; // 2.5s window after an in-page popup trap is triggered
 const recentPopupAttempts = new Map(); // sourceTabId -> timestamp
 const potentialPopups = new Map(); // tabId -> { sourceTabId, sourceHost, createdAt, initialUrl }
 
-// Known popup ad, popunder, and clickjacking network patterns
-const POPUP_AD_PATTERNS = [
+// Explicit ad networks and popunder delivery domains
+const KNOWN_POPUP_AD_DOMAINS = [
   /popads\./i,
   /propellerads\./i,
   /adsterra\./i,
@@ -20,7 +19,7 @@ const POPUP_AD_PATTERNS = [
   /tsyndicate\./i,
   /trafficjunky\./i,
   /ad-maven\./i,
-  /onclick\./i,
+  /onclickads\./i,
   /adcash\./i,
   /richpush\./i,
   /clickadu\./i,
@@ -28,34 +27,31 @@ const POPUP_AD_PATTERNS = [
   /ero-advertising\./i,
   /trafficstars\./i,
   /yadro\.ru/i,
-  /rotator\./i,
-  /popunder/i,
-  /popup/i,
-  /doubleclick\.net/i,
-  /googleads\./i,
-  /googlesyndication\./i,
-  /outbrain\./i,
-  /taboola\./i,
-  /revcontent\./i,
-  /adnxs\./i,
-  /openx\.net/i,
-  /criteo\./i,
   /zeroredirect\./i,
-  /tracking\./i,
-  /affiliate\./i,
-  /\/ad\//i,
-  /\/ads\//i,
-  /\/advert/i,
-  /aff_id=/i,
-  /campaign=/i,
-  /utm_campaign=/i,
-  /zoneid=/i,
-  /clickid=/i,
-  /subid=/i,
-  /token=/i,
+  /popunder/i,
 ];
 
-// Legitimate SSO & OAuth providers that should never be closed
+// Major platforms whose outbound user links must NEVER be blocked or closed
+const TRUSTED_SOURCE_PLATFORMS = [
+  "youtube.com",
+  "youtube-nocookie.com",
+  "google.com",
+  "github.com",
+  "instagram.com",
+  "twitter.com",
+  "x.com",
+  "reddit.com",
+  "facebook.com",
+  "wikipedia.org",
+  "linkedin.com",
+  "twitch.tv",
+  "discord.com",
+  "microsoft.com",
+  "apple.com",
+  "amazon.com",
+];
+
+// Legitimate SSO, OAuth, & payment providers
 const AUTH_DOMAINS = [
   "accounts.google.com",
   "appleid.apple.com",
@@ -75,12 +71,33 @@ function isAuthDomain(urlStr) {
   return AUTH_DOMAINS.some((auth) => urlStr.includes(auth));
 }
 
-function isAdUrl(urlStr) {
+function isTrustedSource(sourceHost) {
+  if (!sourceHost) return false;
+  const lower = sourceHost.toLowerCase();
+  return TRUSTED_SOURCE_PLATFORMS.some((trusted) => lower === trusted || lower.endsWith("." + trusted));
+}
+
+function isKnownAdUrl(urlStr) {
   if (!urlStr || typeof urlStr !== "string") return false;
-  for (const pattern of POPUP_AD_PATTERNS) {
+  for (const pattern of KNOWN_POPUP_AD_DOMAINS) {
     if (pattern.test(urlStr)) return true;
   }
   return false;
+}
+
+function checkAdblockActive() {
+  return new Promise((resolve) => {
+    if (typeof chrome === "undefined" || !chrome.storage || !chrome.storage.local) {
+      resolve(true);
+      return;
+    }
+    chrome.storage.local.get(["activeModules", "adblockEnabled"], (result) => {
+      const activeModules = result?.activeModules || {};
+      const isModuleActive = activeModules.adblock !== false;
+      const isEnabled = result?.adblockEnabled !== false;
+      resolve(isModuleActive && isEnabled);
+    });
+  });
 }
 
 function cleanExpiredEntries() {
@@ -110,19 +127,33 @@ export function recordInPagePopupAttempt(sourceTabId) {
  */
 async function checkAndDestroyPopup(tabId, url, sourceTabId, sourceHost) {
   if (!tabId || !url) return false;
+
+  // 1. Never close tabs if the adblocker module is turned off
+  const isActive = await checkAdblockActive();
+  if (!isActive) return false;
+
+  // 2. Never close tabs opened from trusted platforms (YouTube, Google, Reddit, etc.)
+  if (isTrustedSource(sourceHost)) return false;
+
+  // 3. Never close auth or OAuth logins
   if (isAuthDomain(url)) return false;
+
+  // 4. Never close internal or extension pages
+  if (url.startsWith("chrome://") || url.startsWith("chrome-extension://") || url.startsWith("about:")) {
+    return false;
+  }
 
   const urlLower = url.toLowerCase();
   let shouldDestroy = false;
   let reason = "";
 
-  // 1. Direct match against known ad / popunder networks
-  if (isAdUrl(urlLower)) {
+  // A. Direct match against verified popup/popunder ad networks
+  if (isKnownAdUrl(urlLower)) {
     shouldDestroy = true;
-    reason = "Matched known ad/popunder URL pattern";
+    reason = "Matched verified ad/popunder delivery network";
   }
 
-  // 2. Check if opener tab had an in-page popup attempt within the last 2.5 seconds
+  // B. Opener tab on an untrusted site had a clickjack popup trap triggered within the last 2.5s
   if (!shouldDestroy && sourceTabId && recentPopupAttempts.has(sourceTabId)) {
     const attemptTime = recentPopupAttempts.get(sourceTabId);
     if (Date.now() - attemptTime < POPUP_CHECK_WINDOW_MS) {
@@ -131,32 +162,10 @@ async function checkAndDestroyPopup(tabId, url, sourceTabId, sourceHost) {
         const targetHost = parsed.hostname.toLowerCase().replace(/^www\./, "");
         if (targetHost && sourceHost && targetHost !== sourceHost && !isAuthDomain(url)) {
           shouldDestroy = true;
-          reason = `Spawned during active popup attempt from ${sourceHost} to ${targetHost}`;
+          reason = `Spawned during confirmed popup click trap from untrusted source ${sourceHost} to ${targetHost}`;
         }
       } catch (_) {}
     }
-  }
-
-  // 3. High-risk cross-origin popup check
-  if (!shouldDestroy && sourceHost) {
-    try {
-      const parsed = new URL(url);
-      const targetHost = parsed.hostname.toLowerCase().replace(/^www\./, "");
-      if (
-        targetHost &&
-        targetHost !== sourceHost &&
-        !isAuthDomain(url) &&
-        (urlLower.includes("redirect") ||
-          urlLower.includes("click") ||
-          urlLower.includes("track") ||
-          urlLower.includes("aff_") ||
-          urlLower.includes("zone") ||
-          urlLower.includes("banner"))
-      ) {
-        shouldDestroy = true;
-        reason = `Suspicious cross-origin redirect from ${sourceHost} to ${targetHost}`;
-      }
-    } catch (_) {}
   }
 
   if (shouldDestroy) {
@@ -196,6 +205,9 @@ export function initPopupBlocker() {
         }
       } catch (_) {}
     }
+
+    // Fast-path: if source is a trusted platform (e.g. YouTube), don't even track it
+    if (isTrustedSource(sourceHost)) return;
 
     potentialPopups.set(tabId, {
       sourceTabId,
