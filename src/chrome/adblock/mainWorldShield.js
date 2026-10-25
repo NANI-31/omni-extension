@@ -221,22 +221,15 @@
 
     const urlStr = typeof url === "string" ? url.trim() : (url ? String(url).trim() : "");
 
-    // 1. If it's an explicit OAuth/SSO login provider, allow it
-    if (urlStr && isAuthUrl(urlStr)) {
-      return originalOpen.apply(this, arguments);
+    // 1. Block verified ad and popunder delivery networks
+    if (urlStr && isKnownAdUrl(urlStr)) {
+      window.postMessage({ type: "OMNI_ADBLOCK_POPUP_BLOCKED", url: urlStr }, "*");
+      window.postMessage({ type: "OMNI_ADBLOCK_POPUP_ATTEMPT" }, "*");
+      return createDecoyWindow(urlStr);
     }
 
-    // 2. If it's on the exact same origin and not a popunder, allow it
-    if (urlStr && isSameOriginUrl(urlStr) && !urlStr.includes("pop") && !urlStr.includes("aff_")) {
-      return originalOpen.apply(this, arguments);
-    }
-
-    // 3. For ALL other requests (empty string, about:blank, third-party URLs):
-    //    Block the popup immediately and return the Decoy Window Proxy!
-    window.postMessage({ type: "OMNI_ADBLOCK_POPUP_BLOCKED", url: urlStr || "about:blank" }, "*");
-    window.postMessage({ type: "OMNI_ADBLOCK_POPUP_ATTEMPT" }, "*");
-
-    return createDecoyWindow(urlStr);
+    // 2. Allow all legitimate user-initiated and application window.open calls
+    return originalOpen.apply(this, arguments);
   }
 
   // Hook both window.open and Window.prototype.open
@@ -255,28 +248,6 @@
       Object.defineProperty(window.Window.prototype, "open", {
         value: interceptOpen,
         writable: true,
-        configurable: true,
-      });
-    }
-  } catch (_) {}
-
-  // Protect dynamically created iframes so frame.contentWindow.open is also intercepted
-  try {
-    const originalIframeContentWindow = Object.getOwnPropertyDescriptor(
-      HTMLIFrameElement.prototype,
-      "contentWindow"
-    );
-    if (originalIframeContentWindow && originalIframeContentWindow.get) {
-      Object.defineProperty(HTMLIFrameElement.prototype, "contentWindow", {
-        get() {
-          const win = originalIframeContentWindow.get.call(this);
-          if (win && win.open !== interceptOpen) {
-            try {
-              win.open = interceptOpen;
-            } catch (_) {}
-          }
-          return win;
-        },
         configurable: true,
       });
     }
