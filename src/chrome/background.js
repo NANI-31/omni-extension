@@ -1,4 +1,3 @@
-// InstaGrab Background Service Worker
 import { syncVpnProxy, initVpnListeners } from "./vpn/proxy.js";
 import {
   recordSuccess,
@@ -7,8 +6,12 @@ import {
   loadHealth,
   calculateScore,
 } from "./vpn/health.js";
+import { initMediaSniffer, handleRegisterTabMedia } from "./background/mediaSniffer.js";
+import { initPinterestHandler, resolvePinterestFolder } from "./background/pinterestHandler.js";
+import { initPopupBlocker, recordInPagePopupAttempt } from "./background/popupBlocker.js";
 
 const backgroundLogs = [];
+initPopupBlocker();
 
 chrome.runtime.onInstalled.addListener(() => {
   // One-time storage cleanup migration: remove legacy downloadHistory
@@ -18,8 +21,14 @@ chrome.runtime.onInstalled.addListener(() => {
 
   chrome.storage.local.get(
     ["activeModules", "pinterestFolder", "ytZoneLeft", "ytZoneMiddle", "ytZoneRight", "ytZonesEnabled", "ytBrightnessSensitivity",
-     "ytAllowOverdrive", "ytHistoryDeleteEnabled", "ytHistoryDeletedCount", "ytHistoryDeleteDebug"],
+     "ytAllowOverdrive", "ytHistoryDeleteEnabled", "ytHistoryDeletedCount", "ytHistoryDeleteDebug",
+     "adblockEnabled", "adblockBlockedCount", "adblockYtBypass", "adblockCookieBanner", "adblockNotifications", "adblockWhitelist", "adblockCustomRules"],
     (result) => {
+      // Ensure activeModules includes adblock: true
+      if (result.activeModules && result.activeModules.adblock === undefined) {
+        result.activeModules.adblock = true;
+        chrome.storage.local.set({ activeModules: result.activeModules });
+      }
       // Seed default YouTube scroll zone keys
       const zoneDefaults = {};
       if (result.ytZoneLeft === undefined)          zoneDefaults.ytZoneLeft = "brightness";
@@ -44,13 +53,23 @@ chrome.runtime.onInstalled.addListener(() => {
       // History Quick Delete defaults
       if (result.ytHistoryDeleteEnabled === undefined)   zoneDefaults.ytHistoryDeleteEnabled = true;
       if (result.ytHistoryDeletedCount === undefined)    zoneDefaults.ytHistoryDeletedCount = 0;
-      if (result.ytHistoryDeleteDebug === undefined)     zoneDefaults.ytHistoryDeleteDebug = false;
+      // AdShield defaults
+      if (result.adblockEnabled === undefined)          zoneDefaults.adblockEnabled = true;
+      if (result.adblockBlockedCount === undefined)     zoneDefaults.adblockBlockedCount = 0;
+      if (result.adblockYtBypass === undefined)         zoneDefaults.adblockYtBypass = true;
+      if (result.adblockCookieBanner === undefined)     zoneDefaults.adblockCookieBanner = true;
+      if (result.adblockNotifications === undefined)    zoneDefaults.adblockNotifications = true;
+      if (result.adblockWhitelist === undefined)        zoneDefaults.adblockWhitelist = [];
+      if (result.adblockCustomRules === undefined)      zoneDefaults.adblockCustomRules = "";
       if (Object.keys(zoneDefaults).length > 0) {
         chrome.storage.local.set(zoneDefaults);
       }
 
       if (!result.pinterestFolder) {
         chrome.storage.local.set({ pinterestFolder: "pinterest" });
+      }
+      if (!result.videograbFolder) {
+        chrome.storage.local.set({ videograbFolder: "OmniVideos", videograbSaveAs: false });
       }
       if (!result.activeModules) {
         chrome.storage.local.set({
@@ -60,6 +79,8 @@ chrome.runtime.onInstalled.addListener(() => {
             youtube: true,
             vpn: true,
             pinterest: true,
+            videograb: true,
+            adblock: true,
           },
         });
       } else {
@@ -69,6 +90,8 @@ chrome.runtime.onInstalled.addListener(() => {
         if (updated.youtube === undefined) updated.youtube = true;
         if (updated.vpn === undefined) updated.vpn = true;
         if (updated.pinterest === undefined) updated.pinterest = true;
+        if (updated.videograb === undefined) updated.videograb = true;
+        if (updated.adblock === undefined) updated.adblock = true;
         chrome.storage.local.set({ activeModules: updated }, () => {
           syncVpnProxy();
         });
@@ -79,6 +102,10 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Initialize VPN listeners
 initVpnListeners();
+
+// Initialize Media Stream Sniffer & Pinterest Context Menu Handlers
+initMediaSniffer();
+initPinterestHandler();
 
 function appendToBgHistory(level, msg, ...args) {
   const time = new Date().toISOString().replace("T", " ").replace(/\..+/, "");
@@ -186,6 +213,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === "GET_BACKGROUND_LOGS") {
     sendResponse({ logs: backgroundLogs });
     return false;
+  }
+
+  if (message && message.action === "ADBLOCK_INCREMENT_COUNT") {
+    const inc = message.count || 1;
+    chrome.storage.local.get({ adblockBlockedCount: 0 }, (data) => {
+      const nextCount = (data.adblockBlockedCount || 0) + inc;
+      chrome.storage.local.set({ adblockBlockedCount: nextCount });
+    });
+    sendResponse({ ok: true });
+    return true;
+  }
+
+  if (message && message.action === "ADBLOCK_POPUP_ATTEMPT") {
+    const sourceTabId = sender?.tab?.id;
+    recordInPagePopupAttempt(sourceTabId);
+    sendResponse({ ok: true });
+    return true;
   }
 
   // ── YouTube History Quick Delete counter + log ─────────────────────────────
@@ -341,7 +385,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.folder || meta?.folder || message.subfolder || meta?.subfolder) {
           subdir = message.folder || meta?.folder || message.subfolder || meta?.subfolder;
         } else if (meta?.username === "pinterest" || message.module === "pinterest") {
-          subdir = result.pinterestFolder !== undefined ? result.pinterestFolder : "pinterest";
+          subdir = resolvePinterestFolder(result, message, meta);
         } else {
           subdir =
             result.downloadSubdir !== undefined
@@ -460,9 +504,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 
-// ─── Action click listener (opens index.html in a new tab) ───────────────────
-chrome.action.onClicked.addListener((tab) => {
-  chrome.tabs.create({ url: chrome.runtime.getURL("index.html") });
+// ─── Open Dashboard & Register Tab Media Handlers ──────────────────────────
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg?.action === "OPEN_DASHBOARD_TAB") {
+    chrome.tabs.create({ url: chrome.runtime.getURL("index.html?mode=tab") });
+    sendResponse({ ok: true });
+    return true;
+  }
+
+  if (msg?.action === "REGISTER_TAB_MEDIA" && sender.tab?.id) {
+    return handleRegisterTabMedia(msg, sender, sendResponse);
+  }
 });
 
 // ─── Timer Bypass Main World Injection (CSP Compliant) ───────────────────────
@@ -709,3 +761,107 @@ chrome.webRequest.onErrorOccurred.addListener(
   },
   { urls: ["<all_urls>"] },
 );
+
+// ── Declarative Net Request (DNR) AdShield Rule Synchronizer ────────────────
+const ALL_ADSHIELD_RULESETS = ["easylist", "annoyances", "anticircumvent"];
+
+function syncAdShieldDnrRules() {
+  if (typeof chrome === "undefined" || !chrome.declarativeNetRequest) return;
+
+  chrome.storage.local.get(
+    ["activeModules", "adblockEnabled", "adblockWhitelist"],
+    async (res) => {
+      const modules = res.activeModules || {};
+      const isModuleActive = modules.adblock !== false;
+      const isAdblockEnabled = res.adblockEnabled !== false;
+      const isShieldActive = isModuleActive && isAdblockEnabled;
+      const whitelist = Array.isArray(res.adblockWhitelist) ? res.adblockWhitelist : [];
+
+      try {
+        if (isShieldActive) {
+          // Enable declarative static rulesets
+          await chrome.declarativeNetRequest.updateEnabledRulesets({
+            enableRulesetIds: ALL_ADSHIELD_RULESETS,
+            disableRulesetIds: [],
+          });
+
+          // Update dynamic allow rules for whitelisted domains
+          const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+          const existingRuleIds = existingRules
+            .filter((r) => r.id >= 90000 && r.id < 91000)
+            .map((r) => r.id);
+
+          const newRules = whitelist
+            .filter((d) => typeof d === "string" && d.trim().length > 0)
+            .slice(0, 50)
+            .map((domain, idx) => ({
+              id: 90000 + idx,
+              priority: 5000,
+              action: { type: "allowAllRequests" },
+              condition: {
+                initiatorDomains: [domain.toLowerCase().trim()],
+                resourceTypes: [
+                  "main_frame",
+                  "sub_frame",
+                  "stylesheet",
+                  "script",
+                  "image",
+                  "font",
+                  "object",
+                  "xmlhttprequest",
+                  "ping",
+                  "media",
+                  "websocket",
+                  "other",
+                ],
+              },
+            }));
+
+          await chrome.declarativeNetRequest.updateDynamicRules({
+            removeRuleIds: existingRuleIds,
+            addRules: newRules,
+          });
+
+          logInfo(`[AdShield DNR] Active with 3 rulesets and ${newRules.length} whitelist exemptions.`);
+        } else {
+          // Disable all declarative static rulesets
+          await chrome.declarativeNetRequest.updateEnabledRulesets({
+            enableRulesetIds: [],
+            disableRulesetIds: ALL_ADSHIELD_RULESETS,
+          });
+          const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+          const existingRuleIds = existingRules
+            .filter((r) => r.id >= 90000 && r.id < 91000)
+            .map((r) => r.id);
+          if (existingRuleIds.length > 0) {
+            await chrome.declarativeNetRequest.updateDynamicRules({
+              removeRuleIds: existingRuleIds,
+              addRules: [],
+            });
+          }
+          logInfo("[AdShield DNR] Disabled globally by user configuration.");
+        }
+      } catch (err) {
+        logError("[AdShield DNR] Sync error:", err);
+      }
+    }
+  );
+}
+
+// Watch for configuration changes
+try {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local") return;
+    if (changes.activeModules || changes.adblockEnabled || changes.adblockWhitelist) {
+      syncAdShieldDnrRules();
+    }
+  });
+} catch (_) {}
+
+// Sync on extension initialization
+try {
+  chrome.runtime.onInstalled.addListener(syncAdShieldDnrRules);
+  chrome.runtime.onStartup.addListener(syncAdShieldDnrRules);
+  syncAdShieldDnrRules();
+} catch (_) {}
+

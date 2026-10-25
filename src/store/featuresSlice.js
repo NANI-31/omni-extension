@@ -6,7 +6,10 @@ const initialState = {
     instagrab: true,
     timers: true,
     youtube: true,
+    vpn: true,
     pinterest: true,
+    videograb: true,
+    adblock: true,
   }
 };
 
@@ -19,9 +22,7 @@ const featuresSlice = createSlice({
     },
     toggleModule: (state, action) => {
       const moduleId = action.payload;
-      if (state.activeModules[moduleId] !== undefined) {
-        state.activeModules[moduleId] = !state.activeModules[moduleId];
-      }
+      state.activeModules[moduleId] = !state.activeModules[moduleId];
     },
     setActiveModules: (state, action) => {
       state.activeModules = { ...state.activeModules, ...action.payload };

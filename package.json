@@ -4,8 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/bundle-injected.js",
     "dev": "vite",
-    "prebuild": "node scripts/generate-icons.js && node scripts/copy-ffmpeg.js",
+    "bundle:injected": "node scripts/bundle-injected.js",
+    "prebuild": "node scripts/generate-icons.js && node scripts/copy-ffmpeg.js && node scripts/bundle-injected.js",
+    "ytdlp": "node scripts/ytdlp-server.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

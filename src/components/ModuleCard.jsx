@@ -8,8 +8,6 @@ export default function ModuleCard({
   onNavigate,
   onToggle,
 }) {
-  const borderColor = mod.borderColor || "border-zinc-800 hover:border-zinc-700";
-
   return (
     <div
       onClick={onNavigate}
@@ -17,24 +15,24 @@ export default function ModuleCard({
         "--mod-glow": mod.glowColor || "rgba(139, 92, 246, 0.35)",
         "--mod-accent": mod.accentColor || "#8b5cf6",
       }}
-      className={`group relative cursor-pointer overflow-hidden rounded-2xl border ${borderColor} bg-[#141620] p-5 shadow-sm module-card-hover`}
+      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-5 shadow-xl shadow-black/60 hover:border-zinc-500 hover:shadow-black/80 transition-[border-color,box-shadow] duration-200 module-card-hover"
     >
       {/* Top Accent Bar */}
       <div
         className="absolute top-0 left-0 right-0 h-1 transition-opacity duration-200"
         style={{
           background: `linear-gradient(90deg, ${mod.accentColor || "#8b5cf6"}, transparent)`,
-          opacity: isEnabled ? 0.9 : 0.2,
+          opacity: isEnabled ? 1 : 0.25,
         }}
       />
 
-      {/* Dynamic Ambient Glow */}
+      {/* Dynamic Ambient Glow (Native Radial Gradient - 100x faster than blur) */}
       <div
-        className={`absolute -right-12 -top-12 h-36 w-36 rounded-full blur-[60px] pointer-events-none transition-opacity duration-300 ${
-          isEnabled ? "opacity-25" : "opacity-0"
+        className={`absolute -right-12 -top-12 h-36 w-36 rounded-full pointer-events-none transition-opacity duration-200 ${
+          isEnabled ? "opacity-35" : "opacity-0"
         }`}
         style={{
-          background: mod.accentColor || "#8b5cf6",
+          background: `radial-gradient(circle, ${mod.accentColor || "#8b5cf6"} 0%, transparent 70%)`,
         }}
       />
 
@@ -42,17 +40,17 @@ export default function ModuleCard({
       <div className="relative flex items-center justify-between">
         {/* Icon */}
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br ${mod.color} text-white shadow-md shadow-black/40 ring-1 ring-white/20`}
+          className={`flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br ${mod.color} text-white shadow-md shadow-black/50 border border-white/20`}
         >
-          <ModuleIcon moduleId={mod.id} fallbackIcon={mod.icon} className="w-5.5 h-5.5 text-white drop-shadow" />
+          <ModuleIcon moduleId={mod.id} fallbackIcon={mod.icon} className="w-6 h-6 text-white drop-shadow" />
         </div>
 
         {/* Active/Offline Pill */}
         <div
-          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${
+          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold shadow-sm ${
             isEnabled
-              ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
-              : "border-zinc-700/60 bg-zinc-800/80 text-zinc-400"
+              ? "border-emerald-500/40 bg-emerald-500/20 text-emerald-200 shadow-emerald-950/40"
+              : "border-zinc-700/80 bg-[#0f111e] text-zinc-300 font-medium"
           }`}
         >
           <span
@@ -65,27 +63,24 @@ export default function ModuleCard({
       </div>
 
       {/* Content */}
-      <div className="relative mt-4">
-        <div className="flex items-center gap-2">
-          <h3 className="card-title text-base font-bold tracking-tight text-white transition-colors duration-200">
+      <div className="relative mt-4.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h3 className="card-title text-base font-extrabold tracking-tight text-white group-hover:text-purple-200 transition-colors duration-200">
             {mod.name}
           </h3>
           {mod.category && (
-            <span className="rounded-md border border-zinc-700/50 bg-zinc-800/60 px-1.5 py-0.5 text-[9px] font-semibold text-zinc-400">
+            <span className="rounded-md border border-zinc-700/80 bg-[#0f111e] px-2 py-0.5 text-[10px] font-bold text-zinc-300 font-sans shadow-inner">
               {mod.category}
             </span>
           )}
         </div>
-        <p className="mt-1.5 text-xs leading-relaxed text-zinc-400 line-clamp-2 min-h-9">
+        <p className="mt-2 text-xs leading-relaxed text-zinc-300 font-normal line-clamp-2 min-h-9">
           {mod.description}
         </p>
       </div>
 
-      {/* Divider */}
-      <div className="my-4 h-px bg-zinc-800" />
-
-      {/* Bottom */}
-      <div className="relative flex items-center justify-between gap-2">
+      {/* Inner Control Well */}
+      <div className="relative mt-4.5 rounded-xl bg-[#0f111e] border border-zinc-700/80 p-2.5 flex items-center justify-between gap-2 shadow-inner">
         <div className="flex items-center gap-2.5">
           <Toggle enabled={isEnabled} onChange={onToggle} />
           <StatusBadge
@@ -95,11 +90,11 @@ export default function ModuleCard({
         </div>
 
         {/* Configure Button */}
-        <div className="card-config-btn flex items-center gap-1.5 rounded-xl border border-zinc-700/60 bg-zinc-800/60 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-all duration-200">
-          Configure
-          <span>→</span>
+        <div className="card-config-btn flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 hover:text-white px-3 py-1.5 text-xs font-bold transition-all shadow-sm">
+          <span>Configure</span>
+          <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </div>
       </div>
     </div>
   );
-}
+}

@@ -125,4 +125,28 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
+export function setSafeHTML(element, html) {
+  if (!element) return;
+  if (window.trustedTypes && typeof window.trustedTypes.createPolicy === "function") {
+    try {
+      if (!window.__omniTrustedPolicy) {
+        window.__omniTrustedPolicy = window.trustedTypes.createPolicy("omniPolicy", {
+          createHTML: (s) => s,
+        });
+      }
+      element.innerHTML = window.__omniTrustedPolicy.createHTML(html);
+      return;
+    } catch (e) {}
+  }
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    element.replaceChildren(...doc.body.childNodes);
+  } catch (err) {
+    try {
+      element.innerHTML = html;
+    } catch (e) {}
+  }
+}
+
 

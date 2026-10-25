@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Zap, Sliders, Rocket, Keyboard, KeyRound, Gauge, HelpCircle, Sparkles } from "lucide-react";
+import Toggle from "../../../ui/Toggle";
 
 export default function YoutubeSpeedSettings({
   speedSensitivity,
@@ -98,69 +100,78 @@ export default function YoutubeSpeedSettings({
   }, []);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
       {/* Configuration Column (7 cols) */}
       <div className="md:col-span-7 space-y-6">
-        <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-6 space-y-6 shadow-2xl backdrop-blur-xl relative overflow-hidden before:absolute before:inset-0 before:bg-linear-to-tr before:from-red-500/5 before:to-transparent before:pointer-events-none">
+        <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-6 shadow-xl shadow-black/60 space-y-6">
           
           {/* Header Section */}
-          <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+          <div className="flex items-center justify-between border-b border-zinc-700/70 pb-4">
             <div className="flex items-center gap-3">
-              <span className="text-xl p-2 bg-red-500/10 text-red-400 rounded-lg border border-red-500/10">⚡</span>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/20 text-red-300 border border-red-500/35 shadow-sm">
+                <Zap className="w-4.5 h-4.5" />
+              </div>
               <div>
-                <h3 className="text-sm font-extrabold text-zinc-200 uppercase tracking-widest">
-                  Playback Speed Config
+                <h3 className="text-base font-extrabold text-white tracking-tight">
+                  Playback Speed Engine
                 </h3>
-                <p className="text-[11px] text-zinc-500 mt-0.5">Customize global speed hotkeys</p>
+                <p className="text-xs text-zinc-300 font-normal mt-0.5">
+                  Global speed hotkeys, custom boost multiplier, and overdrive limits
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-450 opacity-75"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
-              <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
+              <span className="text-[10px] bg-red-500/20 text-red-200 border border-red-500/35 px-2.5 py-0.5 rounded-md font-sans font-bold uppercase tracking-wider shadow-sm">
                 Active
               </span>
             </div>
           </div>
 
-          {/* Toggle Option: Hold key for 2x */}
-          <div className="flex items-center justify-between gap-6 py-2 hover:bg-zinc-850/10 rounded-lg p-2 -mx-2 transition-colors">
+          {/* Row 1: Hold key for 2x Toggle */}
+          <div className="rounded-xl bg-[#0f111e] border border-zinc-700/80 p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-inner">
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                <span>🖱️</span> Hold Key Speed Boost
-              </p>
-              <p className="text-xs text-zinc-400 leading-relaxed max-w-sm">
-                Temporarily speed up playback rate while holding down a custom keyboard key.
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Keyboard className="w-4 h-4 text-red-400" />
+                  <span>Hold Key Speed Boost</span>
+                </h4>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  hotkeyHold2x
+                    ? "border-red-500/40 bg-red-500/20 text-red-300"
+                    : "border-zinc-700/80 bg-[#141626] text-zinc-400"
+                }`}>
+                  {hotkeyHold2x ? "Enabled" : "Disabled"}
+                </span>
+              </div>
+              <p className="text-xs text-zinc-300 font-normal leading-relaxed max-w-sm">
+                Temporarily accelerate video playback rate while holding down a designated hotkey.
               </p>
             </div>
-            <button
-              onClick={handleToggleHotkeyHold2x}
-              className={`w-11 h-6 rounded-full transition-all duration-300 relative shrink-0 cursor-pointer ${
-                hotkeyHold2x
-                  ? "bg-linear-to-r from-red-500 to-rose-600 shadow-[0_0_12px_rgba(239,68,68,0.45)]"
-                  : "bg-zinc-800 border border-zinc-700 hover:bg-zinc-750"
-              }`}
-            >
-              <span
-                className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 transition-all duration-300 shadow-md ${
-                  hotkeyHold2x ? "right-1" : "left-1"
-                }`}
-              />
-            </button>
+            <Toggle enabled={hotkeyHold2x} onChange={handleToggleHotkeyHold2x} />
           </div>
 
-          {/* Config options for Hold Speed Boost */}
+          {/* Config options for Hold Speed Boost (Nested Well) */}
           {hotkeyHold2x && (
-            <div className="flex flex-col gap-4 pl-6 border-l-2 border-red-500/25 py-2 transition-all duration-300">
+            <div className="rounded-xl bg-[#0f111e] border border-zinc-700/80 p-4.5 space-y-4 shadow-inner">
               {/* Trigger key selector */}
               <div className="flex items-center justify-between gap-4">
-                <p className="text-xs font-semibold text-zinc-300">Boost Trigger Key</p>
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5 text-red-400" />
+                    <span>Boost Trigger Key</span>
+                  </p>
+                  <p className="text-xs text-zinc-300 font-normal">
+                    Hold this key during video playback to temporarily boost speed.
+                  </p>
+                </div>
                 <select
                   value={holdKey}
                   onChange={handleHoldKeyChange}
-                  className="bg-zinc-950/80 border border-zinc-850 rounded-xl px-2.5 py-1 text-xs text-zinc-200 focus:outline-none focus:border-red-500/40 cursor-pointer"
+                  className="bg-[#141626] border border-zinc-700/80 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-red-500/60 cursor-pointer shadow-inner font-sans font-medium"
                 >
                   <option value="s">Key S (Recommended)</option>
                   <option value="d">Key D</option>
@@ -170,15 +181,23 @@ export default function YoutubeSpeedSettings({
               </div>
 
               {/* Multiplier Slider */}
-              <div className="flex flex-col gap-2">
+              <div className="space-y-2 pt-2 border-t border-zinc-700/60">
                 <div className="flex items-center justify-between gap-4">
-                  <p className="text-xs font-semibold text-zinc-300">Boost Rate Multiplier</p>
-                  <span className="text-xs font-mono font-extrabold text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Gauge className="w-3.5 h-3.5 text-red-400" />
+                      <span>Boost Rate Multiplier</span>
+                    </p>
+                    <p className="text-xs text-zinc-300 font-normal">
+                      Target playback speed multiplier while key is held down.
+                    </p>
+                  </div>
+                  <span className="text-xs font-sans font-extrabold text-red-200 bg-red-500/20 px-2.5 py-1 rounded-lg border border-red-500/35 shadow-sm">
                     {holdSpeedMult.toFixed(2)}x
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-[10px] text-zinc-600 font-mono">1.5x</span>
+                <div className="flex items-center gap-3 pt-1">
+                  <span className="text-[10px] text-zinc-400 font-sans">1.5x</span>
                   <input
                     type="range"
                     min="1.5"
@@ -186,28 +205,34 @@ export default function YoutubeSpeedSettings({
                     step="0.25"
                     value={holdSpeedMult}
                     onChange={(e) => handleHoldSpeedMultChange(Number(e.target.value))}
-                    className="flex-1 accent-red-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer hover:accent-red-400"
+                    className="flex-1 accent-red-500 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer hover:accent-red-400 transition-colors"
                   />
-                  <span className="text-[10px] text-zinc-600 font-mono">{allowOverdrive ? "16.0x" : "4.0x"}</span>
+                  <span className="text-[10px] text-zinc-400 font-sans">{allowOverdrive ? "16.0x" : "4.0x"}</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Speed Increments Sensitivity Selector */}
-          <div className="flex items-center justify-between gap-4 border-t border-zinc-850/50 pt-4">
-            <div className="space-y-0.5">
-              <p className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                <span>⏱️</span> Speed Step Increments
-              </p>
-              <p className="text-xs text-zinc-400 leading-relaxed max-w-sm">
-                Determine the rate of speed changes when adjusting with keyboard shortcuts.
+          {/* Row 2: Speed Increments Sensitivity Selector */}
+          <div className="rounded-xl bg-[#0f111e] border border-zinc-700/80 p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-inner">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-red-400" />
+                  <span>Speed Step Increments</span>
+                </h4>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold border border-red-500/40 bg-red-500/20 text-red-300 font-sans">
+                  ±{speedSensitivity}x
+                </span>
+              </div>
+              <p className="text-xs text-zinc-300 font-normal leading-relaxed max-w-sm">
+                Rate of speed adjustment applied per keyboard shortcut trigger (+/-).
               </p>
             </div>
             <select
               value={speedSensitivity}
               onChange={(e) => handleSpeedSensitivityChange(Number(e.target.value))}
-              className="bg-zinc-950/80 border border-zinc-850 rounded-xl px-2.5 py-1 text-xs text-zinc-200 focus:outline-none focus:border-red-500/40 cursor-pointer"
+              className="bg-[#141626] border border-zinc-700/80 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-red-500/60 cursor-pointer shadow-inner font-sans font-medium"
             >
               <option value={0.05}>0.05x (Fine)</option>
               <option value={0.1}>0.10x</option>
@@ -216,58 +241,55 @@ export default function YoutubeSpeedSettings({
             </select>
           </div>
 
-          {/* Toggle Option: Overdrive Mode */}
-          <div className="flex items-center justify-between gap-6 py-2 border-t border-zinc-850/50 hover:bg-zinc-850/10 rounded-lg p-2 -mx-2 pt-4 transition-colors">
+          {/* Row 3: Toggle Option: Overdrive Mode */}
+          <div className="rounded-xl bg-[#0f111e] border border-zinc-700/80 p-4.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-inner">
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                <span>🚀</span> Speed Overdrive Mode (Up to 16x)
-              </p>
-              <p className="text-xs text-zinc-400 leading-relaxed max-w-md">
-                Unlock speed options beyond the standard 2.0x limit, enabling speeds up to 16.0x.
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Rocket className="w-4 h-4 text-red-400" />
+                  <span>Speed Overdrive Mode (Up to 16x)</span>
+                </h4>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  allowOverdrive
+                    ? "border-red-500/40 bg-red-500/20 text-red-300"
+                    : "border-zinc-700/80 bg-[#141626] text-zinc-400"
+                }`}>
+                  {allowOverdrive ? "Up to 16.0x" : "Capped at 2.0x"}
+                </span>
+              </div>
+              <p className="text-xs text-zinc-300 font-normal leading-relaxed max-w-md">
+                Unlock extreme playback options beyond YouTube's standard 2.0x limit, enabling speeds up to 16.0x.
               </p>
             </div>
-            <button
-              onClick={handleToggleAllowOverdrive}
-              className={`w-11 h-6 rounded-full transition-all duration-300 relative shrink-0 cursor-pointer ${
-                allowOverdrive
-                  ? "bg-linear-to-r from-red-500 to-rose-600 shadow-[0_0_12px_rgba(239,68,68,0.45)]"
-                  : "bg-zinc-800 border border-zinc-700 hover:bg-zinc-750"
-              }`}
-            >
-              <span
-                className={`w-4.5 h-4.5 rounded-full bg-white absolute top-0.75 transition-all duration-300 shadow-md ${
-                  allowOverdrive ? "right-1" : "left-1"
-                }`}
-              />
-            </button>
+            <Toggle enabled={allowOverdrive} onChange={handleToggleAllowOverdrive} />
           </div>
         </div>
 
-        {/* Quick Guide Block */}
-        <div className="bg-red-500/2 border-l-4 border-l-red-500/80 border border-zinc-800/45 rounded-r-2xl p-5 flex gap-4 items-start shadow-md backdrop-blur-sm">
-          <span className="text-xl bg-red-500/10 p-2.5 rounded-xl border border-red-500/10 select-none leading-none shrink-0 text-red-400">
-            💡
-          </span>
+        {/* Quick User Guide Block */}
+        <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-5.5 shadow-xl shadow-black/60 flex gap-4 items-start">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/20 text-red-300 border border-red-500/35 shadow-sm mt-0.5">
+            <HelpCircle className="w-5 h-5" />
+          </div>
           <div className="space-y-2">
-            <h4 className="text-xs font-extrabold text-zinc-200 uppercase tracking-widest">
+            <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">
               Speed Control Shortcuts
             </h4>
-            <ul className="text-xs text-zinc-400 space-y-2 mt-1 leading-relaxed">
+            <ul className="text-xs text-zinc-300 space-y-2 leading-relaxed">
               <li className="flex items-start gap-2">
-                <span className="text-red-500 font-bold shrink-0 mt-0.5">•</span>
-                <span>Press <b>+</b> (or <b>Shift + Right Arrow</b>) to speed up video.</span>
+                <span className="text-red-400 font-bold shrink-0 mt-0.5">•</span>
+                <span>Press <b className="text-white font-semibold">+</b> (or <b className="text-white font-semibold">Shift + Right Arrow</b>) to speed up video.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-red-500 font-bold shrink-0 mt-0.5">•</span>
-                <span>Press <b>-</b> (or <b>Shift + Left Arrow</b>) to slow down video.</span>
+                <span className="text-red-400 font-bold shrink-0 mt-0.5">•</span>
+                <span>Press <b className="text-white font-semibold">-</b> (or <b className="text-white font-semibold">Shift + Left Arrow</b>) to slow down video.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-red-500 font-bold shrink-0 mt-0.5">•</span>
-                <span>Press <b>*</b> (or <b>Shift + R</b>) to reset back to normal 1.00x speed.</span>
+                <span className="text-red-400 font-bold shrink-0 mt-0.5">•</span>
+                <span>Press <b className="text-white font-semibold">*</b> (or <b className="text-white font-semibold">Shift + R</b>) to reset back to normal 1.00x speed.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-red-500 font-bold shrink-0 mt-0.5">•</span>
-                <span>Press and hold <b>{holdKey === " " ? "Space" : holdKey.toUpperCase()}</b> for temporary boost.</span>
+                <span className="text-red-400 font-bold shrink-0 mt-0.5">•</span>
+                <span>Press and hold <b className="text-white font-semibold">{holdKey === " " ? "Spacebar" : holdKey.toUpperCase()}</b> for temporary speed boost.</span>
               </li>
             </ul>
           </div>
@@ -276,12 +298,19 @@ export default function YoutubeSpeedSettings({
 
       {/* Speed Mock Player Test Pad Column (5 cols) */}
       <div className="md:col-span-5 space-y-6 md:sticky md:top-0">
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-5 space-y-4 shadow-2xl backdrop-blur-md">
-          <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-800/60 pb-2">
-            Interactive Speed Pad
-          </h3>
-          <p className="text-xs text-zinc-400 leading-normal">
-            Click on the mock video player below to focus, then press speed shortcuts (<b>+</b>, <b>-</b>, <b>*</b>) or hold your trigger key to preview.
+        <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-5 space-y-4 shadow-xl shadow-black/60">
+          <div className="flex items-center justify-between border-b border-zinc-700/70 pb-3">
+            <h3 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-red-400" />
+              <span>Interactive Speed Pad</span>
+            </h3>
+            <span className="rounded-md border border-red-500/40 bg-red-500/20 px-2 py-0.5 text-[10px] font-bold text-red-200 font-sans shadow-inner">
+              Live Mock
+            </span>
+          </div>
+
+          <p className="text-xs text-zinc-300 leading-relaxed font-normal">
+            Click on the mock video player below to focus, then press speed shortcuts (<b className="text-white font-semibold">+</b>, <b className="text-white font-semibold">-</b>, <b className="text-white font-semibold">*</b>) or hold your trigger key to preview.
           </p>
 
           <div
@@ -294,16 +323,16 @@ export default function YoutubeSpeedSettings({
               setIsBoosting(false);
               setMockSpeed(1.0);
             }}
-            className={`w-full aspect-video rounded-lg bg-zinc-950 border relative overflow-hidden flex flex-col justify-between p-4 group cursor-pointer select-none transition-all duration-300 outline-none ${
-              isFocused ? "border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.25)]" : "border-zinc-800"
+            className={`w-full aspect-video rounded-xl bg-black border relative overflow-hidden flex flex-col justify-between p-4 group cursor-pointer select-none transition-all duration-300 outline-none shadow-inner ${
+              isFocused ? "border-red-500 ring-2 ring-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.3)]" : "border-zinc-700/80"
             }`}
           >
             {/* Top Indicator bar */}
             <div className="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white z-10">
-              <span className="text-xs font-semibold truncate max-w-45">
+              <span className="text-xs font-semibold truncate max-w-45 text-zinc-200">
                 {isFocused ? "🔴 Interactive (Shortcuts active)" : "Click to test hotkeys"}
               </span>
-              <span className="text-[11px] bg-red-655 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+              <span className="text-[10px] bg-red-500/30 text-red-200 border border-red-500/40 px-2 py-0.5 rounded-md font-sans font-bold uppercase tracking-wider shadow-sm">
                 Live Test
               </span>
             </div>
@@ -318,14 +347,14 @@ export default function YoutubeSpeedSettings({
 
               {/* Speed HUD Overlay */}
               <div
-                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-zinc-900/90 border rounded-xl p-3 flex flex-col items-center gap-1.5 text-white pointer-events-none transition-all duration-200 select-none w-22.5 shadow-2xl ${
+                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0f111e]/95 border backdrop-blur-md rounded-2xl p-3.5 flex flex-col items-center gap-1.5 text-white pointer-events-none transition-all duration-200 select-none w-24 shadow-2xl ${
                   mockSpeed > 8.0 ? "yt-hud-overdrive-active" : ""
                 } ${
                   hudVisible ? "opacity-100 scale-100" : "opacity-0 scale-90"
                 } ${
                   mockSpeed > 8.0
                     ? "border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.75)] animate-pulse"
-                    : "border-white/10"
+                    : "border-zinc-700/80"
                 }`}
               >
                 <style>{`
@@ -353,10 +382,10 @@ export default function YoutubeSpeedSettings({
                 <span className={`text-xl leading-none transition-transform duration-200 ${mockSpeed > 8.0 ? "text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.85)] scale-110" : ""}`}>
                   {mockSpeed > 8.0 ? "🔥" : "⚡"}
                 </span>
-                <span className="text-xs font-extrabold font-mono tracking-wide">
+                <span className="text-xs font-extrabold font-sans tracking-wide">
                   {mockSpeed.toFixed(2)}x
                 </span>
-                <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all duration-75 ${
                       mockSpeed > 8.0
@@ -374,7 +403,7 @@ export default function YoutubeSpeedSettings({
               <div className="flex items-center gap-3">
                 <span>⏯</span>
                 <span>⏭</span>
-                <span className="flex items-center gap-1 font-mono text-zinc-300">
+                <span className="flex items-center gap-1 font-sans text-zinc-300">
                   ⚡ {mockSpeed.toFixed(2)}x
                 </span>
               </div>
@@ -397,10 +426,10 @@ export default function YoutubeSpeedSettings({
             </div>
           </div>
 
-          {/* Visual statistics */}
-          <div className="flex justify-between items-center text-xs text-zinc-400 bg-zinc-950/50 p-2.5 rounded-lg border border-zinc-900">
-            <span>Status: <b>{isFocused ? "Listening" : "Inactive"}</b></span>
-            <span>Multiplier: <b className="font-mono text-zinc-200">{mockSpeed.toFixed(2)}x</b></span>
+          {/* Visual statistics monitor under the mockup */}
+          <div className="flex justify-between items-center text-xs text-zinc-300 bg-[#0f111e] p-3 rounded-xl border border-zinc-700/80 shadow-inner font-medium">
+            <span>Status: <b className={isFocused ? "text-emerald-400" : "text-zinc-400"}>{isFocused ? "Listening (Hotkeys Active)" : "Inactive (Click to focus)"}</b></span>
+            <span>Speed Multiplier: <b className="font-sans text-white text-sm">{mockSpeed.toFixed(2)}x</b></span>
           </div>
         </div>
       </div>

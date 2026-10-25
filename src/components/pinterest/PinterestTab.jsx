@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { Folder, FolderOpen, Sparkles, Check, Globe, HelpCircle, Layers, ShieldCheck } from "lucide-react";
 
 export default function PinterestTab() {
   const [folder, setFolder] = useState("pinterest");
@@ -14,7 +15,6 @@ export default function PinterestTab() {
           if (result.pinterestFolder !== undefined) {
             setFolder(result.pinterestFolder);
           } else {
-            // Default to "pinterest"
             setFolder("pinterest");
             chrome.storage.local.set({ pinterestFolder: "pinterest" });
           }
@@ -62,7 +62,7 @@ export default function PinterestTab() {
           saveFolder(name);
         }
       }
-    } catch (err) {
+    } catch {
       // User cancelled picker
     }
   };
@@ -74,89 +74,103 @@ export default function PinterestTab() {
     }
   };
 
-  const presetFolders = ["pinterest", "Pinterest-Media", "Pins", "Wallpapers"];
+  const presetFolders = ["pinterest", "Pinterest-Media", "Pins", "Wallpapers", "Inspiration"];
 
   return (
-    <div className="space-y-6 text-zinc-200 font-sans">
-      {/* Header Banner */}
-      <div className="relative overflow-hidden p-4 rounded-xl bg-linear-to-r from-red-950/60 via-pink-950/40 to-zinc-900 border border-red-900/40 shadow-xl backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-xl bg-linear-to-br from-red-500 to-pink-600 flex items-center justify-center text-2xl shadow-lg shadow-red-500/20">
-              📌
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-white text-base tracking-tight">
-                  PinterestGrab
-                </h3>
-                <span className="px-2 py-0.5 text-[10px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30 rounded-full">
-                  v1.0
-                </span>
-              </div>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Download photos, carousel slides & videos from Pinterest pins.
-              </p>
+    <div className="space-y-6 text-zinc-100 font-sans pb-8">
+      {/* Top Banner / Stat Metrics (Stream Sniffer Style) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-4.5 flex items-center gap-4 shadow-xl shadow-black/60 hover:border-red-500/40 hover:shadow-red-950/20 transition-all">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/20 text-red-300 border border-red-500/35 shadow-sm">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-300">Target Resolution</p>
+            <h4 className="text-xl font-black text-white tracking-tight capitalize">{resolution}</h4>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-4.5 flex items-center gap-4 shadow-xl shadow-black/60 hover:border-red-500/40 hover:shadow-red-950/20 transition-all">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/20 text-red-300 border border-red-500/35 shadow-sm">
+            <Folder className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-300">Target Directory</p>
+            <h4 className="text-sm font-black text-white tracking-tight font-sans truncate max-w-48">
+              Downloads/{folder || "pinterest"}/
+            </h4>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-4.5 flex items-center gap-4 shadow-xl shadow-black/60 hover:border-red-500/40 hover:shadow-red-950/20 transition-all">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/20 text-red-300 border border-red-500/35 shadow-sm">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-300">Downloader Engine</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)] animate-pulse" />
+              <h4 className="text-sm font-extrabold text-zinc-100">Injection Active</h4>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-between gap-3">
-
-      
-      {/* Main Settings Card: Folder Selection */}
-      <div className="p-5 flex-1 rounded-xl bg-zinc-900/40 border border-zinc-800/80 shadow-2xl backdrop-blur-md space-y-4">
-        <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-base">📁</span>
+      {/* Main Settings Card: Download Directory */}
+      <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-5 shadow-xl shadow-black/60 space-y-4">
+        <div className="flex items-center justify-between border-b border-zinc-700/80 pb-3.5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/20 border border-red-500/35 text-red-300 shadow-sm">
+              <Folder className="w-4 h-4" />
+            </div>
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-white">
                 Download Directory
               </h4>
-              <p className="text-[11px] text-zinc-500">
-                Select or customize the target subfolder inside Downloads.
+              <p className="text-xs text-zinc-300 font-normal">
+                Select or customize the target subfolder inside your OS Downloads folder.
               </p>
             </div>
           </div>
-          <span className="text-[11px] font-mono text-red-400 bg-red-950/40 border border-red-900/50 px-2.5 py-1 rounded-lg">
+          <span className="text-[11px] font-sans font-bold text-red-200 bg-red-500/20 border border-red-500/40 px-2.5 py-1 rounded-lg shadow-sm">
             Default: pinterest
           </span>
         </div>
 
         {/* Input & Action */}
-        <div className="space-y-3">
-          <div className="flex gap-2">
+        <div className="space-y-3.5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
             <div className="relative flex-1">
               <input
                 type="text"
                 value={folder}
                 onChange={handleInputChange}
                 placeholder="e.g. pinterest"
-                className="w-full bg-zinc-950/80 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-red-500/60 focus:ring-1 focus:ring-red-500/40 transition-all font-mono"
+                className="w-full bg-[#0b0c16] border border-zinc-700/90 focus:border-red-500/80 focus:ring-1 focus:ring-red-500/40 rounded-xl px-3.5 py-2.5 text-xs font-sans text-zinc-100 placeholder-zinc-500 outline-none transition-all shadow-inner"
               />
             </div>
             <button
               type="button"
               onClick={handleChooseFolder}
-              className="bg-linear-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 active:scale-95 text-white px-4 py-2 text-xs font-bold rounded-lg cursor-pointer border-none shadow-md shadow-red-600/20 transition-all whitespace-nowrap flex items-center gap-1.5"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-650 bg-zinc-800 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-100 hover:text-white text-xs font-semibold shadow-md shadow-black/30 transition-all cursor-pointer whitespace-nowrap active:scale-95"
             >
-              <span>📂</span> Choose Directory
+              <FolderOpen className="w-4 h-4 text-red-400" />
+              <span>Choose Directory</span>
             </button>
           </div>
 
           {/* Quick Presets */}
           <div className="flex items-center gap-2 pt-1 flex-wrap">
-            <span className="text-[11px] text-zinc-500 font-medium">Quick Presets:</span>
+            <span className="text-xs text-zinc-300 font-semibold">Quick Presets:</span>
             {presetFolders.map((preset) => (
               <button
                 key={preset}
                 type="button"
                 onClick={() => saveFolder(preset)}
-                className={`text-[11px] font-mono px-2.5 py-1 rounded-md border transition-all cursor-pointer ${
+                className={`text-[11px] font-sans px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
                   folder === preset
-                    ? "bg-red-500/20 border-red-500/60 text-red-300 font-bold"
-                    : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                    ? "bg-red-500/25 border-red-500/60 text-red-200 font-bold shadow-sm"
+                    : "bg-[#181a2e] border-zinc-700/80 text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-[#20233d]"
                 }`}
               >
                 {preset}
@@ -165,277 +179,102 @@ export default function PinterestTab() {
           </div>
 
           {/* Path Preview Banner */}
-          <div className="p-3 rounded-lg bg-zinc-950/60 border border-zinc-850 flex items-center justify-between text-xs">
-            <span className="text-zinc-500">Output Location:</span>
-            <span className="font-mono text-pink-400 font-medium truncate max-w-65">
+          <div className="p-3 rounded-xl bg-[#0f111e] border border-zinc-700/80 flex items-center justify-between text-xs shadow-inner">
+            <span className="text-zinc-300 font-medium">Output Location:</span>
+            <span className="font-sans text-pink-300 font-bold truncate max-w-72">
               Downloads/{folder || "pinterest"}/
             </span>
           </div>
 
           {/* Save feedback banner */}
           {saveStatus && (
-            <div className="text-xs text-emerald-400 font-medium bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-lg flex items-center gap-2 animate-fade-in">
-              <span className="text-emerald-400 text-sm">✓</span> {saveStatus}
+            <div className="text-xs text-emerald-200 font-bold bg-emerald-500/20 border border-emerald-500/40 px-3.5 py-2 rounded-xl flex items-center gap-2 shadow-sm shadow-emerald-950/40">
+              <Check className="w-4 h-4 text-emerald-300" />
+              <span>{saveStatus}</span>
             </div>
           )}
         </div>
       </div>
 
-        <section className="group relative overflow-hidden rounded-2xl 
-    bg-gradient-to-br from-zinc-900/80 to-zinc-950/60
-    border border-zinc-800/80 p-5 shadow-xl">
-
-    {/* Glow */}
-    <div className="absolute -top-20 -right-20 w-40 h-40 
-      bg-red-500/10 rounded-full blur-3xl group-hover:bg-red-500/20 transition" />
-
-    <div className="relative space-y-4">
-
-      <div className="flex justify-between items-start">
-
-        <div className="flex gap-3">
-          <div className="
-            w-10 h-10 rounded-xl
-            bg-red-500/10
-            border border-red-500/20
-            flex items-center justify-center
-            text-xl">
-            📁
-          </div>
-
-          <div>
-            <h3 className="
-              text-sm font-bold text-zinc-100">
-              Download Directory
-            </h3>
-
-            <p className="
-              text-xs text-zinc-500 mt-1">
-              Choose where your Pinterest media is stored.
-            </p>
-          </div>
-        </div>
-
-
-        <span className="
-          text-[10px]
-          px-3 py-1
-          rounded-full
-          bg-red-500/10
-          border border-red-500/20
-          text-red-300
-          font-mono">
-          DEFAULT / pinterest
-        </span>
-
-      </div>
-
-
-      {/* Input */}
-      <div className="flex gap-2">
-
-        <input
-          type="text"
-          value={folder}
-          onChange={handleInputChange}
-          placeholder="Folder name"
-          className="
-          flex-1
-          h-10
-          rounded-xl
-          bg-black/40
-          border border-zinc-800
-          px-4
-          text-sm
-          text-white
-          placeholder:text-zinc-600
-          focus:border-red-500
-          focus:ring-2
-          focus:ring-red-500/20
-          outline-none
-          transition"
-        />
-
-
-        <button
-          onClick={handleChooseFolder}
-          className="
-          h-10
-          px-4
-          rounded-xl
-          bg-gradient-to-r
-          from-red-600
-          to-pink-600
-          text-white
-          text-xs
-          font-bold
-          shadow-lg
-          shadow-red-500/20
-          hover:brightness-110
-          active:scale-95
-          transition">
-          📂 Choose
-        </button>
-
-      </div>
-
-
-
-      {/* Preview */}
-      <div className="
-        flex items-center justify-between
-        rounded-xl
-        bg-black/30
-        border border-zinc-800
-        px-4 py-3">
-
-        <span className="text-xs text-zinc-500">
-          Saving to
-        </span>
-
-        <span className="
-          text-xs
-          font-mono
-          text-pink-400">
-          Downloads/{folder || "pinterest"}
-        </span>
-
-      </div>
-
-    </div>
-
-  </section>
-
       {/* Resolution Preference Card */}
- {/* Quality */}
-      <section className="rounded-2xl bg-zinc-900/60 border border-zinc-800 p-5 flex-1">
-
-        <div className="flex items-center gap-3 mb-4">
-
-          <div className="
-            w-9 h-9 rounded-xl
-            bg-purple-500/10
-            border border-purple-500/20
-            flex items-center justify-center">
-            💎
+      <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-5 shadow-xl shadow-black/60 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/20 border border-purple-500/35 text-purple-300 shadow-sm">
+            <Layers className="w-4 h-4" />
           </div>
-
-
           <div>
-            <h3 className="
-              text-sm font-bold text-white">
-              Media Quality
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+              Media Quality Selection
             </h3>
-
-            <p className="
-              text-xs text-zinc-500">
-              Select download resolution
+            <p className="text-xs text-zinc-300 font-normal">
+              Select the preferred asset resolution downloaded by the injected grab buttons.
             </p>
           </div>
-
         </div>
 
-
-        <div className="grid grid-cols-3 gap-3">
-
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            ["originals","Original","Maximum"],
-            ["1200x","1200px","High"],
-            ["736x","736px","Standard"]
-          ].map(([id,label,desc])=>(
-            
+            ["originals", "Original", "Maximum Available", "Uncompressed master image"],
+            ["1200x", "1200px", "High Quality", "Standard high-def render"],
+            ["736x", "736px", "Standard Size", "Compact and fast download"],
+          ].map(([id, label, desc, sub]) => (
             <button
               key={id}
-              onClick={()=>handleResolutionChange(id)}
-              className={`
-              rounded-xl
-              p-3
-              text-left
-              border
-              transition-all
-
-              ${
-                resolution===id
-                ?
-                "bg-red-500/15 border-red-500 text-red-300 shadow-lg shadow-red-500/10"
-                :
-                "bg-black/20 border-zinc-800 text-zinc-400 hover:border-zinc-600"
-              }
-              `}>
-
-              <div className="text-sm font-bold">
-                {label}
+              type="button"
+              onClick={() => handleResolutionChange(id)}
+              className={`rounded-xl p-3.5 text-left border transition-all cursor-pointer ${
+                resolution === id
+                  ? "bg-red-500/20 border-red-500/70 text-white shadow-lg shadow-red-500/15 ring-1 ring-red-400/30"
+                  : "bg-[#0f111e] border-zinc-700/80 text-zinc-300 hover:border-zinc-600 hover:text-white"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-extrabold text-white">{label}</span>
+                {resolution === id && <Check className="w-4 h-4 text-red-300" />}
               </div>
-
-              <div className="text-[10px] mt-1 opacity-70">
-                {desc}
-              </div>
-
+              <div className="text-xs font-bold text-red-200 mt-1">{desc}</div>
+              <div className="text-[10px] text-zinc-400 mt-0.5">{sub}</div>
             </button>
-
           ))}
-
-        </div>
-
-      </section>
-      </div>
-
-      {/* Status Summary */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-3.5 rounded-xl bg-zinc-900/40 border border-zinc-800/80 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-lg text-red-400">
-            💎
-          </div>
-          <div>
-            <div className="text-sm font-extrabold text-white capitalize">{resolution}</div>
-            <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium">
-              Target Resolution
-            </div>
-          </div>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-zinc-900/40 border border-zinc-800/80 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-lg text-pink-400">
-            ⚡
-          </div>
-          <div>
-            <div className="text-sm font-extrabold text-emerald-400">Active</div>
-            <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium">
-              Injection Ready
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* How it works */}
-      <div className="space-y-2">
-        <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-1">
-          Quick Guide
+      {/* Quick Guide & Instructions */}
+      <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-5 shadow-xl shadow-black/60 space-y-3.5">
+        <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+          <HelpCircle className="w-4 h-4 text-purple-300" />
+          <span>How It Works & Quick Guide</span>
         </h4>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {[
-            { icon: "🖼️", text: "Hover over any pin card — click Save." },
-            { icon: "📌", text: "Detail pages get a full Download button." },
-            { icon: "⬆️", text: "Auto-upgrades URLs to highest resolution." },
-            { icon: "📁", text: "Saves straight to your configured folder." },
+            { icon: "🖼️", title: "Feed Hover Button", text: "Hover over any pin card in your Pinterest feed and click Save." },
+            { icon: "📌", title: "Detail Page Grabber", text: "Pin detail pages display an elevated full Download button next to the media." },
+            { icon: "⬆️", title: "Resolution Auto-Upgrade", text: "Injected scripts automatically rewrite image URLs to your preferred quality." },
+            { icon: "📁", title: "Direct Folder Organization", text: "Files are directly saved to your designated subfolder inside Downloads." },
           ].map((item, i) => (
             <div
               key={i}
-              className="flex items-start gap-2 p-2.5 bg-zinc-900/30 border border-zinc-800/40 rounded-lg text-xs text-zinc-400"
+              className="flex items-start gap-3 p-3 bg-[#0f111e] border border-zinc-700/80 rounded-xl text-xs text-zinc-300 shadow-inner"
             >
-              <span className="text-sm shrink-0">{item.icon}</span>
-              <span className="leading-snug text-[11px]">{item.text}</span>
+              <span className="text-lg shrink-0 mt-0.5">{item.icon}</span>
+              <div>
+                <p className="text-xs font-bold text-white">{item.title}</p>
+                <p className="leading-relaxed text-[11px] text-zinc-300 font-normal mt-0.5">{item.text}</p>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Supported Domains */}
-      <div className="p-3 rounded-xl bg-zinc-900/20 border border-zinc-800/40 space-y-2">
-        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
-          Supported Domains
-        </p>
-        <div className="flex flex-wrap gap-1.5">
+      {/* Supported Regional Domains */}
+      <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-4.5 space-y-2.5 shadow-xl shadow-black/60">
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-zinc-300" />
+          <p className="text-xs font-bold text-white uppercase tracking-wider">
+            Supported Regional Domains
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-1.5 pt-1">
           {[
             "pinterest.com",
             "pinterest.co.uk",
@@ -448,7 +287,7 @@ export default function PinterestTab() {
           ].map((d) => (
             <span
               key={d}
-              className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full"
+              className="text-[11px] font-sans bg-[#0f111e] border border-zinc-700/80 text-zinc-300 px-2.5 py-1 rounded-lg shadow-sm"
             >
               {d}
             </span>

@@ -1,5 +1,15 @@
 // Skip Wait - DOM Bypasser Content Script
-const isChromeExtension = typeof chrome !== "undefined" && chrome.storage && chrome.storage.local;
+(function () {
+  "use strict";
+
+  const isChromeExtension = typeof chrome !== "undefined" && chrome.storage && chrome.storage.local;
+
+  // Never run DOM bypass timers or auto-scrollers on major platforms
+  const EXCLUDED_TIMER_HOSTS = ["youtube.com", "youtube-nocookie.com", "google.com", "instagram.com", "facebook.com", "twitter.com", "x.com", "netflix.com", "hotstar.com"];
+  const currentTimerHost = window.location.hostname.toLowerCase();
+  if (EXCLUDED_TIMER_HOSTS.some((h) => currentTimerHost.includes(h))) {
+    return;
+  }
 
 // ── State ────────────────────────────────────────────────────────────────────
 // timersRunning tracks whether the setInterval loop is active.
@@ -96,8 +106,12 @@ function runBypassLoop() {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function isHostnameAllowed(bypassDomains) {
+  if (!Array.isArray(bypassDomains) || bypassDomains.length === 0) return false;
   const hostname = window.location.hostname.toLowerCase();
-  return bypassDomains.some(domain => hostname.includes(domain));
+  return bypassDomains.some((domain) => {
+    const d = (domain || "").trim().toLowerCase();
+    return d.length > 2 && hostname.includes(d);
+  });
 }
 
 function initializeDOMBypasses() {
@@ -143,3 +157,4 @@ if (isChromeExtension) {
     });
   });
 }
+})();

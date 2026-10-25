@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Terminal, Download } from "lucide-react";
 import { useSettings } from "../../../context/SettingsContext.jsx";
 
 export default function LoggingControlSetting() {
@@ -58,54 +59,60 @@ export default function LoggingControlSetting() {
   };
 
   const levels = [
-    { value: "silent", label: "Silent", desc: "No logs" },
-    { value: "errors", label: "Errors Only", desc: "Errors" },
-    { value: "verbose", label: "Verbose Debug", desc: "Full debug" }
+    { value: "silent", label: "Silent", desc: "No logs recorded" },
+    { value: "errors", label: "Errors Only", desc: "Failures only" },
+    { value: "verbose", label: "Verbose Debug", desc: "Full trace output" }
   ];
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-[#161824] p-4.5 space-y-3.5 shadow-lg">
-      <div className="space-y-1">
-        <label className="text-xs font-bold text-white uppercase tracking-wider block">
-          Console Debug Logging
-        </label>
-        <span className="text-xs text-zinc-400 block leading-relaxed">
-          Configure console prints or export session logs directly to a text file for troubleshooting.
-        </span>
+    <div className="rounded-2xl border border-zinc-700/80 ring-1 ring-white/10 bg-linear-to-b from-[#1b1e32] to-[#141626] p-5 space-y-4 shadow-xl shadow-black/60">
+      <div className="flex items-center gap-3 border-b border-zinc-700/80 pb-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/20 border border-purple-500/35 text-purple-300 shadow-sm">
+          <Terminal className="w-4 h-4" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-white uppercase tracking-wider block">
+            Console Debug Logging
+          </label>
+          <span className="text-xs text-zinc-300 block leading-relaxed font-normal">
+            Configure console prints or export session logs directly to a text file for troubleshooting.
+          </span>
+        </div>
       </div>
 
-      <div className="flex gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         {levels.map((lvl) => (
           <button
             key={lvl.value}
             type="button"
             onClick={() => setLogLevel(lvl.value)}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
               logLevel === lvl.value
-                ? "border-fuchsia-500 bg-fuchsia-600/25 text-white shadow-md shadow-fuchsia-600/20"
-                : "border-zinc-700/80 bg-[#1b1e2e] text-zinc-300 hover:border-zinc-600 hover:text-white"
+                ? "border-fuchsia-500/70 bg-fuchsia-500/25 text-white shadow-md shadow-fuchsia-950/40 ring-1 ring-fuchsia-400/30"
+                : "border-zinc-700/80 bg-[#0f111e] text-zinc-300 hover:border-zinc-600 hover:text-white"
             }`}
           >
             <span>{lvl.label}</span>
-            <span className="text-[10px] font-medium opacity-75">{lvl.desc}</span>
+            <span className="text-[10px] font-medium opacity-80">{lvl.desc}</span>
           </button>
         ))}
       </div>
 
-      <div className="pt-2.5 border-t border-zinc-800 flex justify-between items-center gap-3">
-        <span className="text-xs text-zinc-400">
-          Session logs are kept in-memory.
+      <div className="pt-3 border-t border-zinc-700/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <span className="text-xs text-zinc-300 font-medium">
+          Session logs are kept strictly in-memory.
         </span>
         <button
           type="button"
           onClick={handleExportLogs}
           disabled={exporting}
-          className="bg-fuchsia-600 hover:bg-fuchsia-500 active:scale-95 text-white px-3.5 py-1.5 text-xs font-bold rounded-xl cursor-pointer border-none transition-all shadow-md shadow-fuchsia-600/20 flex items-center gap-1.5"
+          className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-zinc-650 bg-zinc-800 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-100 hover:text-white text-xs font-semibold shadow-md shadow-black/30 transition-all cursor-pointer whitespace-nowrap active:scale-95"
         >
-          <span>📥</span>
+          <Download className="w-4 h-4 text-fuchsia-400" />
           <span>{exporting ? "Exporting..." : "Export Session Logs"}</span>
         </button>
       </div>
     </div>
   );
 }
+

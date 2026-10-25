@@ -1,18 +1,18 @@
 export default function StatusBadge({ active, text }) {
   return (
     <div
-      className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold border ${
+      className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold border transition-colors ${
         active
-          ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-          : "border-zinc-700 bg-zinc-800/60 text-zinc-500"
+          ? "border-emerald-500/40 bg-emerald-500/20 text-emerald-200 shadow-sm shadow-emerald-950/40"
+          : "border-zinc-700/80 bg-[#0b0c16] text-zinc-300 font-medium"
       }`}
     >
       <span
-        className={`h-2 w-2 rounded-full ${
-          active ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"
+        className={`h-1.5 w-1.5 rounded-full ${
+          active ? "bg-emerald-400 animate-pulse" : "bg-zinc-500"
         }`}
       />
       {text || (active ? "Active" : "Disabled")}
     </div>
   );
-}
+}

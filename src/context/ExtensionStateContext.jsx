@@ -1,8 +1,8 @@
-﻿import React, { createContext, useContext } from "react";
+import { createContext, useContext } from "react";
 import { useHistoryDeleteSettings } from "../hooks/useHistoryDeleteSettings.js";
 import { useHistoryDeleteLog } from "../hooks/useHistoryDeleteLog.js";
 
-const ExtensionStateContext = createContext(null);
+export const ExtensionStateContext = createContext(null);
 
 /**
  * Top-level ExtensionStateProvider component.

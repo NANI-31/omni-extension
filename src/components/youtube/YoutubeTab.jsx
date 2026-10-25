@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import YoutubeFeatureList from "./YoutubeFeatureList.jsx";
 import YoutubeVolumeSettings from "./features/volume/YoutubeVolumeSettings.jsx";
 import YoutubeVolumeTestPad from "./features/volume/YoutubeVolumeTestPad.jsx";
@@ -6,7 +6,7 @@ import YoutubeSpeedSettings from "./features/speed/YoutubeSpeedSettings.jsx";
 import YoutubeQualitySettings from "./features/quality/YoutubeQualitySettings.jsx";
 import YoutubeAdskipSettings from "./features/adskip/YoutubeAdskipSettings.jsx";
 import YoutubeMouse from "./features/mouse/YoutubeMouse.jsx";
-import YoutubeColorSettings, { COLOR_PRESETS } from "./features/color/YoutubeColorSettings.jsx";
+import YoutubeColorSettings from "./features/color/YoutubeColorSettings.jsx";
 import YoutubeHistoryDeleteSettings from "./features/history/YoutubeHistoryDeleteSettings.jsx";
 
 export default function YoutubeTab() {
@@ -32,7 +32,6 @@ export default function YoutubeTab() {
   const [zonesEnabled, setZonesEnabled] = useState(true);
   const [zoneLeft, setZoneLeft] = useState("brightness");
   const [zoneMiddle, setZoneMiddle] = useState("volume");
-  const [zoneRight, setZoneRight] = useState("speed");
   const [brightnessSensitivity, setBrightnessSensitivity] = useState(5);
   const [seekSensitivity, setSeekSensitivity] = useState(5);
   const [seekCtrlSensitivity, setSeekCtrlSensitivity] = useState(30);
@@ -144,7 +143,6 @@ export default function YoutubeTab() {
           if (result.ytZonesEnabled !== undefined)        setZonesEnabled(result.ytZonesEnabled);
           if (result.ytZoneLeft !== undefined)            setZoneLeft(result.ytZoneLeft);
           if (result.ytZoneMiddle !== undefined)          setZoneMiddle(result.ytZoneMiddle);
-          if (result.ytZoneRight !== undefined)           setZoneRight(result.ytZoneRight);
           if (result.ytBrightnessSensitivity !== undefined) setBrightnessSensitivity(Number(result.ytBrightnessSensitivity));
           if (result.ytSeekSensitivity !== undefined)    setSeekSensitivity(Number(result.ytSeekSensitivity));
           if (result.ytSeekCtrlStep !== undefined)       setSeekCtrlSensitivity(Number(result.ytSeekCtrlStep));
@@ -279,10 +277,6 @@ export default function YoutubeTab() {
   const handleZoneMiddleChange = (val) => {
     setZoneMiddle(val);
     updateSetting("ytZoneMiddle", val);
-  };
-  const handleZoneRightChange = (val) => {
-    setZoneRight(val);
-    updateSetting("ytZoneRight", val);
   };
   const handleBrightnessSensitivityChange = (val) => {
     setBrightnessSensitivity(val);
@@ -420,10 +414,10 @@ export default function YoutubeTab() {
   ];
 
   return (
-    <div className="h-full flex flex-col lg:grid lg:grid-cols-12 gap-8 items-stretch min-h-0">
+    <div className="w-full h-full min-h-0 flex flex-col lg:flex-row gap-6 items-stretch text-zinc-100 font-sans overflow-y-auto lg:overflow-hidden pb-2">
       
       {/* 1. Left Side Panel: Features Selector (Constant / Pinned Sidebar) */}
-      <div className="lg:col-span-3 space-y-4 shrink-0 lg:h-full lg:overflow-y-auto scrollbar-youtube pr-1 select-none">
+      <div className="w-full lg:w-64 xl:w-72 shrink-0 h-auto lg:h-full flex flex-col min-h-0 lg:overflow-y-auto scroll-smooth scrollbar-youtube pr-1 select-none">
         <YoutubeFeatureList
           features={features}
           selectedFeature={selectedFeature}
@@ -432,9 +426,9 @@ export default function YoutubeTab() {
       </div>
 
       {/* 2. Main Content View Pane (Right Side Panel - Independently Scrollable) */}
-      <div className="lg:col-span-9 flex-1 min-h-0 h-full overflow-y-auto scrollbar-youtube pr-3 pb-8">
+      <div className="flex-1 min-w-0 min-h-0 w-full h-auto lg:h-full lg:overflow-y-auto overscroll-y-contain scroll-smooth scrollbar-youtube pr-2 pb-8">
         {selectedFeature === "volume" && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             {/* Left Column: Settings configuration */}
             <div className="md:col-span-7 space-y-6">
               <YoutubeVolumeSettings
@@ -539,7 +533,6 @@ export default function YoutubeTab() {
           />
         )}
       </div>
-
     </div>
   );
 }

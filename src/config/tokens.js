@@ -1,4 +1,4 @@
-﻿/**
+/**
  * OmniExtension Design Token Registry
  * Centralized design system tokens for color palettes, typography, glow effects,
  * card surfaces, and module branding across YouTube, InstaGrab, Pinterest, Timers, and VPN.
@@ -61,6 +61,28 @@ export const COLOR_TOKENS = {
     badgeStyle: "border-sky-500/30 bg-sky-500/10 text-sky-300",
     borderColor: "border-sky-500/30 hover:border-sky-400/80",
   },
+  videograb: {
+    primary: "#a855f7",
+    primaryHover: "#9333ea",
+    gradient: "from-violet-500 via-purple-600 to-indigo-600",
+    accentBg: "rgba(168, 85, 247, 0.1)",
+    border: "rgba(168, 85, 247, 0.3)",
+    glow: "rgba(168, 85, 247, 0.35)",
+    text: "#c084fc",
+    badgeStyle: "border-purple-500/30 bg-purple-500/10 text-purple-300",
+    borderColor: "border-purple-500/30 hover:border-purple-400/80",
+  },
+  adblock: {
+    primary: "#06b6d4",
+    primaryHover: "#0891b2",
+    gradient: "from-cyan-500 via-teal-500 to-emerald-600",
+    accentBg: "rgba(6, 182, 212, 0.1)",
+    border: "rgba(6, 182, 212, 0.3)",
+    glow: "rgba(6, 182, 212, 0.35)",
+    text: "#22d3ee",
+    badgeStyle: "border-cyan-500/30 bg-cyan-500/10 text-cyan-300",
+    borderColor: "border-cyan-500/30 hover:border-cyan-400/80",
+  },
 
   // Dark Theme Surface Hierarchy
   surfaces: {
@@ -88,6 +110,8 @@ export const GLOW_EFFECTS = {
   pinterest: "0 0 24px rgba(225, 29, 72, 0.25)",
   emerald: "0 0 24px rgba(16, 185, 129, 0.25)",
   sky: "0 0 24px rgba(14, 165, 233, 0.25)",
+  videograb: "0 0 24px rgba(168, 85, 247, 0.25)",
+  adblock: "0 0 24px rgba(6, 182, 212, 0.25)",
   panel: "0 10px 30px rgba(0, 0, 0, 0.5)",
 };
 
@@ -96,6 +120,6 @@ export const TYPOGRAPHY_TOKENS = {
   sectionHeader: "text-xs font-bold text-zinc-400 uppercase tracking-widest",
   bodyText: "text-xs text-zinc-400 leading-relaxed",
   bodyBold: "text-xs font-semibold text-zinc-200",
-  badgeText: "text-[10px] font-bold font-mono uppercase tracking-wider",
+  badgeText: "text-[10px] font-bold font-sans uppercase tracking-wider",
   inputField: "w-full px-3 py-1.5 bg-zinc-900/90 border border-zinc-800 focus:border-red-500/50 rounded-lg text-xs text-zinc-200 placeholder-zinc-500 outline-none transition-colors",
 };

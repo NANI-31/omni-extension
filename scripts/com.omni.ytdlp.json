@@ -1,0 +1,11 @@
+{
+  "name": "com.omni.ytdlp",
+  "description": "Omni Extension Companion Host",
+  "path": "D:\\Data\\Github\\omni-extension\\scripts\\native-host.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://gkenceapffdabffmeoogmcelljacppie/",
+    "chrome-extension://dphleochackolcpjpcbjlmibjmjmeojf/",
+    "chrome-extension://ceoolinilmfkbhldkafagejmanddbecf/"
+  ]
+}

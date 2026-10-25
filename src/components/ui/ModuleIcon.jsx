@@ -50,6 +50,25 @@ export function PinterestIcon({ className = "w-6 h-6" }) {
   );
 }
 
+export function VideoGrabIcon({ className = "w-6 h-6" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2.5" y="4" width="19" height="16" rx="3.5" stroke="currentColor" strokeWidth="2" />
+      <path d="M2.5 9h19M2.5 15h19" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" />
+      <path d="M12 7.5v6m0 0l-2-2m2 2l2-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function AdShieldIcon({ className = "w-6 h-6" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L4 5.5v6c0 5 3.5 9.5 8 10.5 4.5-1 8-5.5 8-10.5v-6L12 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function ModuleIcon({ moduleId, fallbackIcon, className = "w-5 h-5" }) {
   switch (moduleId) {
     case "instagrab":
@@ -62,6 +81,10 @@ export default function ModuleIcon({ moduleId, fallbackIcon, className = "w-5 h-
       return <VpnIcon className={className} />;
     case "pinterest":
       return <PinterestIcon className={className} />;
+    case "videograb":
+      return <VideoGrabIcon className={className} />;
+    case "adblock":
+      return <AdShieldIcon className={className} />;
     default:
       return <span className="select-none text-base">{fallbackIcon}</span>;
   }

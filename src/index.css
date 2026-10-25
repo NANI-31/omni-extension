@@ -13,6 +13,8 @@
   --brand-timers-glow: rgba(16, 185, 129, 0.35);
   --brand-vpn: #0ea5e9;
   --brand-vpn-glow: rgba(14, 165, 233, 0.35);
+  --brand-adblock: #06b6d4;
+  --brand-adblock-glow: rgba(6, 182, 212, 0.35);
 
   /* Surface Hierarchy Tokens */
   --surface-bg: #0f0f15;
@@ -48,11 +50,30 @@
 }
 
 html, body {
-  overflow-x: hidden;
   margin: 0;
   padding: 0;
+  scroll-behavior: smooth;
   background-color: var(--surface-bg);
   color: #f4f4f5;
+}
+
+/* Ensure Chrome extension popup has fixed, stable dimensions */
+body:not(.tab-mode) {
+  width: 460px !important;
+  min-width: 460px !important;
+  max-width: 460px !important;
+  height: 580px !important;
+  min-height: 580px !important;
+  max-height: 600px !important;
+  overflow: hidden !important;
+}
+
+body.tab-mode {
+  width: 100% !important;
+  min-width: 100% !important;
+  height: 100% !important;
+  min-height: 100vh !important;
+  overflow-x: hidden;
 }
 
 /* Utility to hide scrollbars while preserving scrolling */

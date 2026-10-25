@@ -259,15 +259,6 @@ function findCardWrapper(pinLink) {
   return firstBigEnough;
 }
 
-// ── Button injection ──────────────────────────────────────────────────────────
-function injectButton(cardEl, pinId) {
-  if (cardEl.dataset.pgrabCard) return; // already done
-  cardEl.dataset.pgrabCard = pinId;
-
-  // Ensure the card is positioned so our absolute child is contained
-  const pos = getComputedStyle(cardEl).position;
-  if (pos === "static") cardEl.style.position = "relative";
-
 function setSafeHTML(element, html) {
   if (!element) return;
   if (window.trustedTypes && typeof window.trustedTypes.createPolicy === "function") {
@@ -291,6 +282,15 @@ function setSafeHTML(element, html) {
     } catch (e) {}
   }
 }
+
+// ── Button injection ──────────────────────────────────────────────────────────
+function injectButton(cardEl, pinId) {
+  if (cardEl.dataset.pgrabCard) return; // already done
+  cardEl.dataset.pgrabCard = pinId;
+
+  // Ensure the card is positioned so our absolute child is contained
+  const pos = getComputedStyle(cardEl).position;
+  if (pos === "static") cardEl.style.position = "relative";
 
   const wrap = document.createElement("div");
   wrap.className = "pgrab-btn-wrap";

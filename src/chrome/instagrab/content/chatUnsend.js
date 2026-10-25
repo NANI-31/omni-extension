@@ -199,3 +199,21 @@ export function stopChatUnsendObserver() {
   }
   document.querySelectorAll('.instagrab-quick-unsend').forEach(btn => btn.remove());
 }
+
+/**
+ * Initializes storage listener for Quick Unsend in Chats
+ */
+export function initChatUnsendListener() {
+  if (typeof chrome === 'undefined' || !chrome.storage?.local) return;
+
+  chrome.storage.local.get(["quickUnsendEnabled"], (result) => {
+    if (result.quickUnsendEnabled) setupChatUnsendObserver();
+  });
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.quickUnsendEnabled) {
+      if (changes.quickUnsendEnabled.newValue) setupChatUnsendObserver();
+      else stopChatUnsendObserver();
+    }
+  });
+}

@@ -3,7 +3,9 @@
   "name": "Omni Extension",
   "version": "1.0.0",
   "description": "Unified browser productivity workspace featuring media downloaders, YouTube toolkit, timer bypass, and VPN controls.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7FSLRT96IdGa34ZYmhIZgUuVPDTOHvUhAOMAtNFQNNXFJbNVjf1wkswBfg3cvo6KNb8Mf1TembNMTWwPnIEG1DsSIHuIJlqiFkB4tQ8tkwLgxIS8Mx095CGpJuuGZ2DkLdRXpyUMv3lu/xUfxT9ZkunU0LNEgs7KoJDM3g6eHqXs1dEpMkMUsfosgAEMqiVt/lQ5mZom8MKCeQ4PVJLpQjh9u2ltlmhMC7XEpn5MIj6Es2K+6+ebVtnbeWPaJDW9jl/UdpjiTHBuPmUbFDCmjbFofu+/eJ44xby5ZeIGStJjZazk20spmBUxmnvLebNAO2gosXp1WymgA0HfBuaGRwIDAQAB",
   "permissions": [
+    "tabs",
     "downloads",
     "storage",
     "alarms",
@@ -11,7 +13,10 @@
     "scripting",
     "webNavigation",
     "webRequest",
-    "proxy"
+    "proxy",
+    "nativeMessaging",
+    "declarativeNetRequest",
+    "contextMenus"
   ],
 
   "content_security_policy": {
@@ -27,6 +32,20 @@
     "service_worker": "background.js"
   },
   "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["adblock-main.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true,
+      "match_about_blank": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["adblock.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
     {
       "matches": ["https://*.instagram.com/*"],
       "js": ["content.js"],
@@ -51,7 +70,14 @@
     {
       "matches": ["<all_urls>"],
       "js": ["youtube.js"],
-      "run_at": "document_idle",
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["youtube-injected.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
       "all_frames": true
     },
     {
@@ -59,10 +85,17 @@
       "js": ["skiptimer.js"],
       "run_at": "document_start",
       "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["videograb.js"],
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ],
   "action": {
-    "default_icon": "icon-32.png"
+    "default_icon": "icon-32.png",
+    "default_popup": "index.html"
   },
   "icons": {
     "16": "icon-16.png",
@@ -70,13 +103,32 @@
     "48": "icon-48.png",
     "128": "icon-128.png"
   },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "easylist",
+        "enabled": true,
+        "path": "rules/easylist.json"
+      },
+      {
+        "id": "annoyances",
+        "enabled": true,
+        "path": "rules/annoyances.json"
+      },
+      {
+        "id": "anticircumvent",
+        "enabled": true,
+        "path": "rules/anticircumvent.json"
+      }
+    ]
+  },
   "web_accessible_resources": [
     {
       "resources": ["injected.js"],
       "matches": ["https://*.instagram.com/*"]
     },
     {
-      "resources": ["youtube-injected.js"],
+      "resources": ["youtube-injected.js", "adblock-main.js"],
       "matches": ["<all_urls>"]
     }
   ]
